@@ -13,9 +13,12 @@ public interface ProductService {
 	
 	ProductResponse getAllProducts(Integer pageNumber, Integer pageSize, String sortBy, String sortDir);
 	
-	void deleteProduct(Integer productId);
+	boolean deleteProduct(Integer productId);
 	
 	ProductResponse getProductsBySellerId(Integer sellerId, Integer pageNumber, Integer pageSize, String sortBy, String sortDir);
 	
 	ProductResponse getProductsByCategoryId(Integer categoryId, Integer pageNumber, Integer pageSize, String sortBy, String sortDir);
+	
+	ProductResponse searchProducts(String keyword, Integer pageNumber, Integer pageSize, String sortBy,
+			String sortDir);
 }

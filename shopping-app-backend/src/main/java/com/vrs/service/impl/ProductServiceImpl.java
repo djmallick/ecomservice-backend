@@ -1,7 +1,9 @@
 package com.vrs.service.impl;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.modelmapper.ModelMapper;
@@ -10,9 +12,15 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.stereotype.Service;
 
+import com.vrs.dto.CategoryDto;
+import com.vrs.dto.CustomerDto;
 import com.vrs.dto.ProductDto;
+import com.vrs.dto.SellerDto;
+import com.vrs.dto.UserDto;
 import com.vrs.entities.Category;
+import com.vrs.entities.Customer;
 import com.vrs.entities.Product;
 import com.vrs.entities.Seller;
 import com.vrs.exception.ResourceNotFoundException;
@@ -24,6 +32,7 @@ import com.vrs.repositories.SellerRepo;
 import com.vrs.repositories.UserRepo;
 import com.vrs.service.ProductService;
 
+@Service
 public class ProductServiceImpl implements ProductService {
 	
 	@Autowired
@@ -57,7 +66,12 @@ public class ProductServiceImpl implements ProductService {
 		product.setSeller(seller);
 		product.setAverageRating(0);
 		Product savedProduct = productRepo.save(product);
-		return modelMapper.map(savedProduct, ProductDto.class);
+		SellerDto sellerDto = modelMapper.map(savedProduct.getSeller(), SellerDto.class);
+		CategoryDto categoryDto = modelMapper.map(savedProduct.getCategory(), CategoryDto.class);
+		ProductDto pd = modelMapper.map(savedProduct, ProductDto.class);
+		pd.setSellerDto(sellerDto);
+		pd.setCategoryDto(categoryDto);
+		return pd;
 	}
 
 	@Override
@@ -68,13 +82,23 @@ public class ProductServiceImpl implements ProductService {
 		product.setStock(productDto.getStock());
 		product.setProductName(productDto.getProductName());
 		Product updatedProduct = productRepo.save(product);
-		return modelMapper.map(updatedProduct, ProductDto.class);
+		SellerDto sellerDto = modelMapper.map(updatedProduct.getSeller(), SellerDto.class);
+		CategoryDto categoryDto = modelMapper.map(updatedProduct.getCategory(), CategoryDto.class);
+		ProductDto pd = modelMapper.map(updatedProduct, ProductDto.class);
+		pd.setSellerDto(sellerDto);
+		pd.setCategoryDto(categoryDto);
+		return pd;	
 	}
 
 	@Override
 	public ProductDto getProductByProductId(Integer productId) {
-		Product product = productRepo.findById(productId).orElseThrow(()-> new ResourceNotFoundException("Seller","id", productId));
-		return modelMapper.map(product, ProductDto.class);
+		Product product = productRepo.findById(productId).orElseThrow(()-> new ResourceNotFoundException("Product","id", productId));
+		SellerDto sellerDto = modelMapper.map(product.getSeller(), SellerDto.class);
+		CategoryDto categoryDto = modelMapper.map(product.getCategory(), CategoryDto.class);
+		ProductDto pd = modelMapper.map(product, ProductDto.class);
+		pd.setSellerDto(sellerDto);
+		pd.setCategoryDto(categoryDto);
+		return pd;	
 	}
 
 	@Override
@@ -89,21 +113,24 @@ public class ProductServiceImpl implements ProductService {
 		Pageable p = PageRequest.of(pageNumber, pageSize, sort);
 		Page<Product> pageProducts = productRepo.findAll(p);
 		List<Product> products = pageProducts.getContent();
-		List<ProductDto> fetchedProducts = products.stream().map(product->modelMapper.map(product, ProductDto.class)).collect(Collectors.toList());
-		ProductResponse productResponse = new ProductResponse();
-		productResponse.setContents(fetchedProducts);
-		productResponse.setPageNumber(pageProducts.getNumber());
-		productResponse.setPageSize(pageProducts.getSize());
-		productResponse.setTotalElements(pageProducts.getTotalElements());
-		productResponse.setLastPage(pageProducts.isLast());
-		productResponse.setTotalPages(pageProducts.getTotalPages());
-		return productResponse;
+		List<ProductDto> fetchedProducts = new ArrayList<ProductDto>();
+		for(Product product:products) {
+			SellerDto sd = modelMapper.map(product.getSeller(), SellerDto.class);
+			CategoryDto cd = modelMapper.map(product.getCategory(), CategoryDto.class);
+			ProductDto pd = modelMapper.map(product, ProductDto.class);
+			pd.setSellerDto(sd);
+			pd.setCategoryDto(cd);
+			fetchedProducts.add(pd);
+		}
+		return createProductResponse(fetchedProducts, pageProducts);
 	}
 
 	@Override
-	public void deleteProduct(Integer productId) {
-		Product product = productRepo.findById(productId).orElseThrow(()-> new ResourceNotFoundException("Seller","id", productId));
+	public boolean deleteProduct(Integer productId) {
+		Product product = productRepo.findById(productId).orElseThrow(()-> new ResourceNotFoundException("Product","id", productId));
 		productRepo.delete(product);
+		Optional<Product> deletedProduct = productRepo.findById(productId);
+		return deletedProduct.isEmpty();
 	}
 
 	@Override
@@ -120,21 +147,22 @@ public class ProductServiceImpl implements ProductService {
 		Pageable p = PageRequest.of(pageNumber, pageSize, sort);
 		Page<Product> pageProducts = productRepo.findBySeller(seller, p);
 		List<Product> products = pageProducts.getContent();
-		List<ProductDto> fetchedProducts = products.stream().map(product->modelMapper.map(product, ProductDto.class)).collect(Collectors.toList());
-		ProductResponse productResponse = new ProductResponse();
-		productResponse.setContents(fetchedProducts);
-		productResponse.setPageNumber(pageProducts.getNumber());
-		productResponse.setPageSize(pageProducts.getSize());
-		productResponse.setTotalElements(pageProducts.getTotalElements());
-		productResponse.setLastPage(pageProducts.isLast());
-		productResponse.setTotalPages(pageProducts.getTotalPages());
-		return productResponse;
+		List<ProductDto> fetchedProducts = new ArrayList<ProductDto>();
+		for(Product product:products) {
+			SellerDto sd = modelMapper.map(product.getSeller(), SellerDto.class);
+			CategoryDto cd = modelMapper.map(product.getCategory(), CategoryDto.class);
+			ProductDto pd = modelMapper.map(product, ProductDto.class);
+			pd.setSellerDto(sd);
+			pd.setCategoryDto(cd);
+			fetchedProducts.add(pd);
+		}
+		return createProductResponse(fetchedProducts, pageProducts);
 	}
 
 	@Override
 	public ProductResponse getProductsByCategoryId(Integer categoryId, Integer pageNumber, Integer pageSize,
 			String sortBy, String sortDir) {
-		Category category = categoryRepo.findById(categoryId).orElseThrow(()-> new ResourceNotFoundException("Seller","id", categoryId));
+		Category category = categoryRepo.findById(categoryId).orElseThrow(()-> new ResourceNotFoundException("Category","id", categoryId));
 
 		Sort sort = null;
 		if(sortDir.equals("desc")) {
@@ -146,9 +174,46 @@ public class ProductServiceImpl implements ProductService {
 		Pageable p = PageRequest.of(pageNumber, pageSize, sort);
 		Page<Product> pageProducts = productRepo.findByCategory(category, p);
 		List<Product> products = pageProducts.getContent();
-		List<ProductDto> fetchedProducts = products.stream().map(product->modelMapper.map(product, ProductDto.class)).collect(Collectors.toList());
+		List<ProductDto> fetchedProducts = new ArrayList<ProductDto>();
+		for(Product product:products) {
+			SellerDto sd = modelMapper.map(product.getSeller(), SellerDto.class);
+			CategoryDto cd = modelMapper.map(product.getCategory(), CategoryDto.class);
+			ProductDto pd = modelMapper.map(product, ProductDto.class);
+			pd.setSellerDto(sd);
+			pd.setCategoryDto(cd);
+			fetchedProducts.add(pd);
+		}
+		return createProductResponse(fetchedProducts, pageProducts);
+	}
+
+	@Override
+	public ProductResponse searchProducts(String keyword, Integer pageNumber, Integer pageSize, String sortBy, String sortDir) {
+		Sort sort = null;
+		if(sortDir.equals("desc")) {
+			sort = Sort.by(sortBy).descending();
+		}
+		else {
+			sort = Sort.by(sortBy).ascending();
+		}
+		Pageable p = PageRequest.of(pageNumber, pageSize, sort);
+		
+		Page<Product> pageProducts = productRepo.findByProductNameContaining(keyword, p);
+		List<Product> products = pageProducts.getContent();
+		List<ProductDto> fetchedProducts = new ArrayList<ProductDto>();
+		for(Product product:products) {
+			SellerDto sd = modelMapper.map(product.getSeller(), SellerDto.class);
+			CategoryDto cd = modelMapper.map(product.getCategory(), CategoryDto.class);
+			ProductDto pd = modelMapper.map(product, ProductDto.class);
+			pd.setSellerDto(sd);
+			pd.setCategoryDto(cd);
+			fetchedProducts.add(pd);
+		}
+		return createProductResponse(fetchedProducts, pageProducts);
+	}
+	
+	public static ProductResponse createProductResponse(List<ProductDto> products, Page<Product> pageProducts) {
 		ProductResponse productResponse = new ProductResponse();
-		productResponse.setContents(fetchedProducts);
+		productResponse.setContents(products);
 		productResponse.setPageNumber(pageProducts.getNumber());
 		productResponse.setPageSize(pageProducts.getSize());
 		productResponse.setTotalElements(pageProducts.getTotalElements());

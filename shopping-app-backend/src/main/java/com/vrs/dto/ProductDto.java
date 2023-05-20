@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Positive;
 import javax.validation.constraints.Size;
 
@@ -12,16 +13,20 @@ public class ProductDto {
 	private int productId;
 	
 	@Size(max=50,min=10, message ="Maximum length should be 50 and minimum length should be 10")
+	@NotNull
 	private String productName;
 	
 	@Size(max=1000,min=10, message ="Maximum length should be 1000 and minimum length should be 10")
+	@NotNull
 	private String productDescription;
 	private Date productAddedDate;
 	private boolean active;
 	
 	@Positive
+	@NotNull
 	private double price;
 	@Positive
+	@NotNull
 	private int stock;
 	
 	private SellerDto sellerDto;
