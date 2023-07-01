@@ -15,7 +15,7 @@ public class CategoryDto {
 	@NotEmpty(message = "Must not be empty")
 	private String categoryDescription;
 	
-	private List<ProductDto> productDtos = new ArrayList<>();
+//	private List<ProductDto> productDtos = new ArrayList<>();
 
 	public Integer getCategoryId() {
 		return categoryId;
@@ -41,12 +41,12 @@ public class CategoryDto {
 		this.categoryDescription = categoryDescription;
 	}
 
-	public List<ProductDto> getProductDtos() {
-		return productDtos;
-	}
-
-	public void setProductDtos(List<ProductDto> productDtos) {
-		this.productDtos = productDtos;
-	}
+//	public List<ProductDto> getProductDtos() {
+//		return productDtos;
+//	}
+//
+//	public void setProductDtos(List<ProductDto> productDtos) {
+//		this.productDtos = productDtos;
+//	}
 
 }

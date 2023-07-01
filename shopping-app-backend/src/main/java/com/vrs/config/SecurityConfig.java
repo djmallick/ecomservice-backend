@@ -45,11 +45,12 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter{
 		http
 			.csrf().disable()
 			.authorizeHttpRequests()
+			.antMatchers("/api/category").permitAll()
+			.antMatchers("/api/category/*").permitAll()
 			.antMatchers("/api/auth/login").permitAll()
 			.antMatchers("/user/seller").permitAll()
 			.antMatchers("/user/*").permitAll()
 			.antMatchers("/user/seller/*").permitAll()
-			.antMatchers("/user/customer/*").permitAll()
 			.anyRequest()
 			.authenticated()
 			.and()
