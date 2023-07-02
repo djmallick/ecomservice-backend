@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import com.vrs.payload.ApiResponse;
+import com.vrs.payload.OrderResponse;
 
 
 @RestControllerAdvice
@@ -47,5 +48,12 @@ public class GlobalExceptionHandler {
 			map.put(errorField, message);
 		});
 		return new ResponseEntity<Map<String,String>> (map,HttpStatus.BAD_REQUEST);
+	}
+	
+	@ExceptionHandler(ProductOutOfStockException.class)
+	public ResponseEntity<OrderResponse> productOutOfStockExceptionExceptionHandler(ProductOutOfStockException ex){
+		String message = ex.getMessage();
+		OrderResponse orderResponse = new OrderResponse(false, message, null);
+		return new ResponseEntity<OrderResponse> (orderResponse,HttpStatus.NOT_IMPLEMENTED);
 	}
 }

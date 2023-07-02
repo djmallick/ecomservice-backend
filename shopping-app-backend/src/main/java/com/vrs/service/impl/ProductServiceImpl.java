@@ -12,6 +12,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import com.vrs.dto.CategoryDto;
@@ -23,6 +24,7 @@ import com.vrs.entities.Category;
 import com.vrs.entities.Customer;
 import com.vrs.entities.Product;
 import com.vrs.entities.Seller;
+import com.vrs.entities.User;
 import com.vrs.exception.ResourceNotFoundException;
 import com.vrs.payload.ProductResponse;
 import com.vrs.repositories.CategoryRepo;
@@ -103,6 +105,7 @@ public class ProductServiceImpl implements ProductService {
 
 	@Override
 	public ProductResponse getAllProducts(Integer pageNumber, Integer pageSize, String sortBy, String sortDir) {
+//		System.out.println("User email: "+SecurityContextHolder.getContext().getAuthentication().getName());
 		Sort sort = null;
 		if(sortDir.equals("desc")) {
 			sort = Sort.by(sortBy).descending();
@@ -127,10 +130,18 @@ public class ProductServiceImpl implements ProductService {
 
 	@Override
 	public boolean deleteProduct(Integer productId) {
+		String userEmail = SecurityContextHolder.getContext().getAuthentication().getName();
+		User user = userRepo.findByEmail(userEmail).get();
+		
 		Product product = productRepo.findById(productId).orElseThrow(()-> new ResourceNotFoundException("Product","id", productId));
-		productRepo.delete(product);
-		Optional<Product> deletedProduct = productRepo.findById(productId);
-		return deletedProduct.isEmpty();
+		if(product.getSeller().getUser().getUserId()==user.getUserId()) {
+			productRepo.delete(product);
+			Optional<Product> deletedProduct = productRepo.findById(productId);
+			return deletedProduct.isEmpty();
+		} else {
+			System.out.println("Unauthorized: User "+user.getUserId() + " tries to delete product of different user "+product.getSeller().getUser().getUserId());
+			return false;
+		}
 	}
 
 	@Override

@@ -8,8 +8,8 @@ public class OrderDto {
 	private Date orderDate;
 	private boolean active;
 	private String status;
-	private ProductDto productDto;
-	private CustomerDto customerDto;
+	private int productId;
+	private int customerId;
 	
 	public int getOrderId() {
 		return orderId;
@@ -35,19 +35,18 @@ public class OrderDto {
 	public void setStatus(String status) {
 		this.status = status;
 	}
-	public ProductDto getProductDto() {
-		return productDto;
+	public int getCustomerId() {
+		return customerId;
 	}
-	public void setProductDto(ProductDto productDto) {
-		this.productDto = productDto;
+	public void setCustomerId(int customerId) {
+		this.customerId = customerId;
 	}
-	public CustomerDto getCustomerDto() {
-		return customerDto;
+	public int getProductId() {
+		return productId;
 	}
-	public void setCustomerDto(CustomerDto customerDto) {
-		this.customerDto = customerDto;
+	public void setProductId(int productId) {
+		this.productId = productId;
 	}
-	
 	
 
 }
