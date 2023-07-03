@@ -2,6 +2,7 @@ package com.vrs.entities;
 
 import java.util.Date;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -9,6 +10,7 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToOne;
 import javax.persistence.Table;
 
 @Entity
@@ -22,6 +24,7 @@ public class Order {
 	private Date orderDate;
 	private boolean active;
 	private String status;
+	private int quantity;
 	
 	@ManyToOne
 	@JoinColumn(name ="product_id")
@@ -31,6 +34,18 @@ public class Order {
 	@JoinColumn(name ="customer_id")
 	private Customer customer;
 	
+	@OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "delivery_address_id")
+	private DeliveryAddress deliveryAddress;
+	
+	public DeliveryAddress getDeliveryAddress() {
+		return deliveryAddress;
+	}
+
+	public void setDeliveryAddress(DeliveryAddress deliveryAddress) {
+		this.deliveryAddress = deliveryAddress;
+	}
+
 	public Customer getCustomer() {
 		return customer;
 	}
@@ -77,6 +92,14 @@ public class Order {
 
 	public void setProduct(Product product) {
 		this.product = product;
+	}
+
+	public int getQuantity() {
+		return quantity;
+	}
+
+	public void setQuantity(int quantity) {
+		this.quantity = quantity;
 	}
 	
 	

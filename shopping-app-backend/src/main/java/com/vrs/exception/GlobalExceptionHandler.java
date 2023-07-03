@@ -56,4 +56,11 @@ public class GlobalExceptionHandler {
 		OrderResponse orderResponse = new OrderResponse(false, message, null);
 		return new ResponseEntity<OrderResponse> (orderResponse,HttpStatus.NOT_IMPLEMENTED);
 	}
+	
+	@ExceptionHandler(InvalidUpdateException.class)
+	public ResponseEntity<OrderResponse> invalidUpdateExceptionHandler(InvalidUpdateException ex){
+		String message = ex.getMessage();
+		OrderResponse orderResponse = new OrderResponse(false, message, null);
+		return new ResponseEntity<OrderResponse> (orderResponse,HttpStatus.NOT_IMPLEMENTED);
+	}
 }

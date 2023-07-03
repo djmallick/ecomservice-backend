@@ -6,7 +6,7 @@ import com.vrs.dto.OrderDto;
 
 public interface OrderService {
 	
-	OrderDto createOrder(Integer productId, Integer customerId);
+	OrderDto createOrder(OrderDto orderDto);
 	OrderDto updateOrder(OrderDto orderDto, Integer orderId);
 	boolean deleteOrder(Integer orderId);
 	OrderDto getOrderById(Integer orderId);

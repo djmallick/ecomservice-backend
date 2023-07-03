@@ -2,10 +2,12 @@ package com.vrs.exception;
 
 public class ProductOutOfStockException extends RuntimeException {
 	private int productId;
+	private String message;
 	
-	public ProductOutOfStockException(int productId) {
-		super(String.format("Product with ID %s out of stock!",productId));
+	public ProductOutOfStockException(int productId, String message) {
+		super(String.format("Product ID: %s - %s",productId, message));
 		this.productId= productId;
+		this.message = message;
 	}
 
 }
