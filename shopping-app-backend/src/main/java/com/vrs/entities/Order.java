@@ -5,6 +5,8 @@ import java.util.Date;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -23,7 +25,8 @@ public class Order {
 	private int orderId;
 	private Date orderDate;
 	private boolean active;
-	private String status;
+	@Enumerated(EnumType.STRING)
+	private OrderStatus status;
 	private int quantity;
 	
 	@ManyToOne
@@ -78,14 +81,6 @@ public class Order {
 		this.active = active;
 	}
 
-	public String getStatus() {
-		return status;
-	}
-
-	public void setStatus(String status) {
-		this.status = status;
-	}
-
 	public Product getProduct() {
 		return product;
 	}
@@ -101,7 +96,15 @@ public class Order {
 	public void setQuantity(int quantity) {
 		this.quantity = quantity;
 	}
-	
-	
 
+	public OrderStatus getStatus() {
+		return status;
+	}
+
+	public void setStatus(OrderStatus status) {
+		this.status = status;
+	}
+	
+	
 }
+

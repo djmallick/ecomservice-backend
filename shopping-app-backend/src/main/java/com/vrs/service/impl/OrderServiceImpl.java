@@ -5,6 +5,9 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
+
+import javax.validation.Valid;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,9 +15,11 @@ import org.springframework.stereotype.Service;
 
 import com.vrs.dto.DeliveryAddressDto;
 import com.vrs.dto.OrderDto;
+import com.vrs.entities.Category;
 import com.vrs.entities.Customer;
 import com.vrs.entities.DeliveryAddress;
 import com.vrs.entities.Order;
+import com.vrs.entities.OrderStatus;
 import com.vrs.entities.Product;
 import com.vrs.exception.InvalidUpdateException;
 import com.vrs.exception.ProductOutOfStockException;
@@ -59,7 +64,7 @@ public class OrderServiceImpl implements OrderService{
 				DeliveryAddress address = modelMapper.map(orderDto.getDeliveryAddress(), DeliveryAddress.class);
 				order.setActive(true);
 				order.setOrderDate(new Date());
-				order.setStatus("placed");
+				order.setStatus(OrderStatus.ACCEPTED);
 				order.setDeliveryAddress(address);
 				order.setProduct(product);
 				order.setCustomer(customer);
@@ -85,20 +90,20 @@ public class OrderServiceImpl implements OrderService{
 
 
 	@Override
-	public OrderDto updateOrder(OrderDto orderDto, Integer orderId) {
+	public OrderDto updateOrderAddress(OrderDto orderDto, Integer orderId) {
 		Order order = orderRepo.findById(orderId).orElseThrow(()-> new ResourceNotFoundException("Order","id", orderId));
 		
-		if(order.isActive()) {
+		if(order.getStatus().equals(OrderStatus.ACCEPTED)) {
 			Instant start = order.getOrderDate().toInstant();
 			Instant stop = new Date().toInstant();
 			Instant target = start.plus( 24 , ChronoUnit.HOURS );
 			if(!stop.isAfter( target )) {
-				updateOrderAddress(orderDto.getDeliveryAddress(), order.getDeliveryAddress());
+				changeAddress(orderDto.getDeliveryAddress(), order.getDeliveryAddress());
 			} else {
 				throw new InvalidUpdateException("Order address for ", orderId,"Address can be updated till 24 hours");
 			}
 		} else {
-			throw new InvalidUpdateException("Order address for ", orderId,"order is not active");
+			throw new InvalidUpdateException("Order address for ", orderId,"order is already shipped or delivered");
 		}
 		
 		Order updatedOrder = orderRepo.save(order);
@@ -112,7 +117,7 @@ public class OrderServiceImpl implements OrderService{
 	}
 	
 	
-	private void updateOrderAddress(DeliveryAddressDto newAddress, DeliveryAddress currentAddress) {
+	private void changeAddress(DeliveryAddressDto newAddress, DeliveryAddress currentAddress) {
 		currentAddress.setAddress1(newAddress.getAddress1());
 		currentAddress.setAddress2(newAddress.getAddress2());
 		currentAddress.setDistrict(newAddress.getDistrict());
@@ -120,17 +125,61 @@ public class OrderServiceImpl implements OrderService{
 		currentAddress.setState(newAddress.getState());
 		currentAddress.setPinCode(newAddress.getPinCode());
 	}
+	
+	@Override
+	public OrderDto updateOrderStatus(OrderDto orderDto, Integer orderId) {
+		Order order = orderRepo.findById(orderId).orElseThrow(()-> new ResourceNotFoundException("Order","id", orderId));
+		//Updating order status by seller
+		if(orderDto.getStatus()!= null) {
+			String status = orderDto.getStatus();
+			if(status.equals("accepted")) {
+				order.setStatus(OrderStatus.ACCEPTED);
+				order.setActive(true);
+			} else if(status.equals("shipped")) {
+				order.setStatus(OrderStatus.SHIPPED);
+				order.setActive(true);
+			} else if(status.equals("delivered")) {
+				order.setStatus(OrderStatus.DELIVERED);
+				order.setActive(false);
+			} else if(status.equals("cancelled")) {
+				order.setStatus(OrderStatus.CANCELLED);
+				order.setActive(false);
+			} else {
+				throw new InvalidUpdateException("Order status for ID ", orderId,"status is invalid"); 
+			}
+		} else {
+			throw new InvalidUpdateException("Order status for ID ", orderId,"status should be not null"); 
+		}
+		
+		Order updatedOrder = orderRepo.save(order);
+		
+		OrderDto updatedOrderDto = orderToOrderDto(updatedOrder);
+		updatedOrderDto.setSellerName(updatedOrder.getProduct().getSeller().getFirstName()+" "+updatedOrder.getProduct().getSeller().getLastName());
+		updatedOrderDto.setSellerMobile(updatedOrder.getProduct().getSeller().getMobileNumber());
+		DeliveryAddressDto addressDto = modelMapper.map(updatedOrder.getDeliveryAddress(), DeliveryAddressDto.class);
+		updatedOrderDto.setDeliveryAddress(addressDto);
+		return updatedOrderDto;
+		
+	}
+
 
 	@Override
 	public boolean deleteOrder(Integer orderId) {
-		// TODO Auto-generated method stub
-		return false;
+		Order order = orderRepo.findById(orderId).orElseThrow(()-> new ResourceNotFoundException("Order","id", orderId));
+		orderRepo.delete(order);
+		Optional<Order> deletedOrder = orderRepo.findById(orderId);
+		return deletedOrder.isEmpty();
 	}
 
 	@Override
 	public OrderDto getOrderById(Integer orderId) {
-		// TODO Auto-generated method stub
-		return null;
+		Order order = orderRepo.findById(orderId).orElseThrow(()-> new ResourceNotFoundException("Order","id", orderId));
+		OrderDto fetchedOrderDto = orderToOrderDto(order);
+		DeliveryAddressDto addressDto = modelMapper.map(order.getDeliveryAddress(), DeliveryAddressDto.class);
+		fetchedOrderDto.setDeliveryAddress(addressDto);
+		fetchedOrderDto.setSellerName(order.getProduct().getSeller().getFirstName()+" "+order.getProduct().getSeller().getLastName());
+		fetchedOrderDto.setSellerMobile(order.getProduct().getSeller().getMobileNumber());
+		return fetchedOrderDto;
 	}
 
 	@Override
@@ -179,6 +228,8 @@ public class OrderServiceImpl implements OrderService{
 		dto.setProductId(order.getProduct().getProductId());
 		return dto;
 	}
+
+
 
 
 }

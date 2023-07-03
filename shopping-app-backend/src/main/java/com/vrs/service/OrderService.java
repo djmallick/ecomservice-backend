@@ -2,12 +2,14 @@ package com.vrs.service;
 
 import java.util.List;
 
+
 import com.vrs.dto.OrderDto;
 
 public interface OrderService {
 	
 	OrderDto createOrder(OrderDto orderDto);
-	OrderDto updateOrder(OrderDto orderDto, Integer orderId);
+	OrderDto updateOrderStatus(OrderDto orderDto, Integer orderId);
+	OrderDto updateOrderAddress(OrderDto orderDto, Integer orderId);
 	boolean deleteOrder(Integer orderId);
 	OrderDto getOrderById(Integer orderId);
 	List<OrderDto> getAllOrders();

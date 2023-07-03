@@ -5,15 +5,20 @@ import javax.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.vrs.dto.OrderDto;
 import com.vrs.dto.ProductDto;
+import com.vrs.entities.OrderStatus;
+import com.vrs.payload.ApiResponse;
 import com.vrs.payload.OrderResponse;
 import com.vrs.service.OrderService;
 import com.vrs.service.ProductService;
@@ -33,21 +38,39 @@ public class OrderController {
 		return new ResponseEntity<OrderResponse>(response, HttpStatus.CREATED);	
 	}
 	
-	@PutMapping("/order/{orderId}")
-	public ResponseEntity<OrderResponse> updateOrder(
+	@PutMapping("/order/{orderId}/address")
+	public ResponseEntity<OrderResponse> updateOrderAddress(
 			@Valid @RequestBody OrderDto orderDto, @PathVariable Integer orderId) {
-		OrderDto updatedOrder = orderService.updateOrder(orderDto, orderId);
-		OrderResponse response = new OrderResponse(true, "Order updated successfully", updatedOrder);
+		OrderDto updatedOrder = orderService.updateOrderAddress(orderDto, orderId);
+		OrderResponse response = new OrderResponse(true, "Order Address updated successfully", updatedOrder);
 		return new ResponseEntity<OrderResponse>(response, HttpStatus.OK);	
 	}
 	
 	@PutMapping("/order/{orderId}/status")
 	public ResponseEntity<OrderResponse> updateOrderStatus(
-			@Valid @RequestBody OrderDto orderDto, @PathVariable Integer orderId) {
-		OrderDto updatedOrder = orderService.updateOrder(orderDto, orderId);
-		OrderResponse response = new OrderResponse(true, "Order updated successfully", updatedOrder);
+			@RequestBody OrderDto orderDto, @PathVariable Integer orderId) {
+		OrderDto updatedOrder = orderService.updateOrderStatus(orderDto, orderId);
+		OrderResponse response = new OrderResponse(true, "Order status updated successfully", updatedOrder);
 		return new ResponseEntity<OrderResponse>(response, HttpStatus.OK);	
 	}
 	
+	@DeleteMapping("/order/{orderId}")
+	public ResponseEntity<OrderResponse> deleteOrder(
+			@PathVariable Integer orderId) {
+		boolean isDeleted = orderService.deleteOrder(orderId);
+		if(isDeleted) {
+			return new ResponseEntity<OrderResponse>(new OrderResponse(true, "Order deleted successfully", null), HttpStatus.OK);	
+		}
+		return new ResponseEntity<OrderResponse>(new OrderResponse(false, "There is an issue to delete the product",null), HttpStatus.NOT_IMPLEMENTED);	
+	}
+	
+	@GetMapping("/order/{orderId}")
+	public ResponseEntity<OrderResponse> getOrderById(
+			@PathVariable Integer orderId) {
+		OrderDto orderDto = orderService.getOrderById(orderId);
+		return new ResponseEntity<OrderResponse>(new OrderResponse(true, "Fetched successfully", orderDto), HttpStatus.OK);	
+	}
+	
+
 	
 }
