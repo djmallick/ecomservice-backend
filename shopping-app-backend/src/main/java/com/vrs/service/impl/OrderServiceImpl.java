@@ -186,7 +186,6 @@ public class OrderServiceImpl implements OrderService{
 
 	@Override
 	public OrderPagedResponse getAllOrders(Integer pageNumber, Integer pageSize, String sortBy, String sortDir) {
-		// TODO Auto-generated method stub
 		Sort sort = null;
 		if(sortDir.equals("desc")) {
 			sort = Sort.by(sortBy).descending();
@@ -197,16 +196,17 @@ public class OrderServiceImpl implements OrderService{
 		Pageable p = PageRequest.of(pageNumber, pageSize, sort);
 		Page<Order> pageOrders = orderRepo.findAll(p);
 		List<Order> orders = pageOrders.getContent();
-		List<OrderDto> fetchedProducts = new ArrayList<OrderDto>();
+		List<OrderDto> fetchedOrders = new ArrayList<OrderDto>();
 		for(Order order:orders) {
 			OrderDto fetchedOrderDto = orderToOrderDto(order);
 			DeliveryAddressDto addressDto = modelMapper.map(order.getDeliveryAddress(), DeliveryAddressDto.class);
 			fetchedOrderDto.setDeliveryAddress(addressDto);
 			fetchedOrderDto.setSellerName(order.getProduct().getSeller().getFirstName()+" "+order.getProduct().getSeller().getLastName());
 			fetchedOrderDto.setSellerMobile(order.getProduct().getSeller().getMobileNumber());
-			fetchedProducts.add(fetchedOrderDto);
+			fetchedOrders.add(fetchedOrderDto);
 		}
-		return createOrderPagedResponse(fetchedProducts, pageOrders);
+		System.out.println("Inside================================");
+		return createOrderPagedResponse(fetchedOrders, pageOrders);
 	}
 
 	@Override
@@ -255,6 +255,8 @@ public class OrderServiceImpl implements OrderService{
 		orderPagedResponse.setTotalElements(pageOrders.getTotalElements());
 		orderPagedResponse.setLastPage(pageOrders.isLast());
 		orderPagedResponse.setTotalPages(pageOrders.getTotalPages());
+		orderPagedResponse.setSuccessful(true);
+		orderPagedResponse.setMessage("Fetched successfully");
 		return orderPagedResponse;
 	}
 

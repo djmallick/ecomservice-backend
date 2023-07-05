@@ -15,13 +15,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.vrs.config.AppConstants;
 import com.vrs.dto.OrderDto;
-import com.vrs.dto.ProductDto;
-import com.vrs.entities.OrderStatus;
-import com.vrs.payload.ApiResponse;
+import com.vrs.payload.OrderPagedResponse;
 import com.vrs.payload.OrderResponse;
 import com.vrs.service.OrderService;
-import com.vrs.service.ProductService;
 
 @RestController
 @RequestMapping("/api")
@@ -69,6 +67,17 @@ public class OrderController {
 			@PathVariable Integer orderId) {
 		OrderDto orderDto = orderService.getOrderById(orderId);
 		return new ResponseEntity<OrderResponse>(new OrderResponse(true, "Fetched successfully", orderDto), HttpStatus.OK);	
+	}
+	
+	@GetMapping("/order")
+	public ResponseEntity<OrderPagedResponse> getAllOrders(
+			@RequestParam(value="pageNumber", defaultValue=AppConstants.PAGE_NUMBER, required =false) Integer pageNumber,
+			@RequestParam(value="pageSize", defaultValue=AppConstants.PAGE_SIZE, required =false) Integer pageSize,
+			@RequestParam(value="sortBy", defaultValue=AppConstants.ORDER_SORT_BY, required=false) String sortBy,
+			@RequestParam(value="sortDir", defaultValue=AppConstants.SORT_DIR, required=false) String sortDir
+			) {
+		OrderPagedResponse allOrders = orderService.getAllOrders(pageNumber, pageSize, sortBy, sortDir);
+		return new ResponseEntity<OrderPagedResponse>(allOrders, HttpStatus.OK);	
 	}
 	
 
