@@ -205,21 +205,35 @@ public class OrderServiceImpl implements OrderService{
 			fetchedOrderDto.setSellerMobile(order.getProduct().getSeller().getMobileNumber());
 			fetchedOrders.add(fetchedOrderDto);
 		}
-		System.out.println("Inside================================");
 		return createOrderPagedResponse(fetchedOrders, pageOrders);
 	}
 
 	@Override
-	public List<OrderDto> getOrdersByCustomerId(Integer customerId) {
-		// TODO Auto-generated method stub
-		return null;
+	public OrderPagedResponse getOrdersByCustomerId(Integer pageNumber, Integer pageSize, String sortBy, String sortDir, Integer customerId, boolean onlyActive) {
+		Customer customer = customerRepo.findById(customerId).orElseThrow(()-> new ResourceNotFoundException("Customer","id", customerId));
+		Sort sort = null;
+		if(sortDir.equals("desc")) {
+			sort = Sort.by(sortBy).descending();
+		}
+		else {
+			sort = Sort.by(sortBy).ascending();
+		}
+		Pageable p = PageRequest.of(pageNumber, pageSize, sort);
+		Page<Order> pageOrders = orderRepo.findByCustomer(customer, p);
+
+		List<Order> orders = pageOrders.getContent();
+		List<OrderDto> fetchedOrders = new ArrayList<OrderDto>();
+		for(Order order:orders) {
+			OrderDto fetchedOrderDto = orderToOrderDto(order);
+			DeliveryAddressDto addressDto = modelMapper.map(order.getDeliveryAddress(), DeliveryAddressDto.class);
+			fetchedOrderDto.setDeliveryAddress(addressDto);
+			fetchedOrderDto.setSellerName(order.getProduct().getSeller().getFirstName()+" "+order.getProduct().getSeller().getLastName());
+			fetchedOrderDto.setSellerMobile(order.getProduct().getSeller().getMobileNumber());
+			fetchedOrders.add(fetchedOrderDto);
+		}
+		return createOrderPagedResponse(fetchedOrders, pageOrders);
 	}
 
-	@Override
-	public List<OrderDto> getOrdersByCustomerId(Integer customerId, boolean isActive) {
-		// TODO Auto-generated method stub
-		return null;
-	}
 
 	@Override
 	public List<OrderDto> getOrdersBySellerId(Integer sellerId) {

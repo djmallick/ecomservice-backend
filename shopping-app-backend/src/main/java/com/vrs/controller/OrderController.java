@@ -80,6 +80,18 @@ public class OrderController {
 		return new ResponseEntity<OrderPagedResponse>(allOrders, HttpStatus.OK);	
 	}
 	
+	@GetMapping("/order/customer/{customerId}")
+	public ResponseEntity<OrderPagedResponse> getOrdersByCustomerId(
+			@RequestParam(value="pageNumber", defaultValue=AppConstants.PAGE_NUMBER, required =false) Integer pageNumber,
+			@RequestParam(value="pageSize", defaultValue=AppConstants.PAGE_SIZE, required =false) Integer pageSize,
+			@RequestParam(value="sortBy", defaultValue=AppConstants.ORDER_SORT_BY, required=false) String sortBy,
+			@RequestParam(value="sortDir", defaultValue=AppConstants.SORT_DIR, required=false) String sortDir,
+			@RequestParam(value="onlyActive", defaultValue="true", required =false) boolean onlyActive,
+			@PathVariable Integer customerId
+			) {
+		OrderPagedResponse allOrders = orderService.getOrdersByCustomerId(pageNumber, pageSize, sortBy, sortDir, customerId, onlyActive);
+		return new ResponseEntity<OrderPagedResponse>(allOrders, HttpStatus.OK);	
+	}
 
 	
 }
