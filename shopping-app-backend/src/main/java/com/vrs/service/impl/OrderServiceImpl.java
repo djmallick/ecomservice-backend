@@ -1,21 +1,23 @@
 package com.vrs.service.impl;
 
-import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
-import javax.validation.Valid;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import com.vrs.dto.DeliveryAddressDto;
 import com.vrs.dto.OrderDto;
-import com.vrs.entities.Category;
 import com.vrs.entities.Customer;
 import com.vrs.entities.DeliveryAddress;
 import com.vrs.entities.Order;
@@ -24,7 +26,7 @@ import com.vrs.entities.Product;
 import com.vrs.exception.InvalidUpdateException;
 import com.vrs.exception.ProductOutOfStockException;
 import com.vrs.exception.ResourceNotFoundException;
-import com.vrs.repositories.CategoryRepo;
+import com.vrs.payload.OrderPagedResponse;
 import com.vrs.repositories.CustomerRepo;
 import com.vrs.repositories.OrderRepo;
 import com.vrs.repositories.ProductRepo;
@@ -183,9 +185,28 @@ public class OrderServiceImpl implements OrderService{
 	}
 
 	@Override
-	public List<OrderDto> getAllOrders() {
+	public OrderPagedResponse getAllOrders(Integer pageNumber, Integer pageSize, String sortBy, String sortDir) {
 		// TODO Auto-generated method stub
-		return null;
+		Sort sort = null;
+		if(sortDir.equals("desc")) {
+			sort = Sort.by(sortBy).descending();
+		}
+		else {
+			sort = Sort.by(sortBy).ascending();
+		}
+		Pageable p = PageRequest.of(pageNumber, pageSize, sort);
+		Page<Order> pageOrders = orderRepo.findAll(p);
+		List<Order> orders = pageOrders.getContent();
+		List<OrderDto> fetchedProducts = new ArrayList<OrderDto>();
+		for(Order order:orders) {
+			OrderDto fetchedOrderDto = orderToOrderDto(order);
+			DeliveryAddressDto addressDto = modelMapper.map(order.getDeliveryAddress(), DeliveryAddressDto.class);
+			fetchedOrderDto.setDeliveryAddress(addressDto);
+			fetchedOrderDto.setSellerName(order.getProduct().getSeller().getFirstName()+" "+order.getProduct().getSeller().getLastName());
+			fetchedOrderDto.setSellerMobile(order.getProduct().getSeller().getMobileNumber());
+			fetchedProducts.add(fetchedOrderDto);
+		}
+		return createOrderPagedResponse(fetchedProducts, pageOrders);
 	}
 
 	@Override
@@ -218,15 +239,23 @@ public class OrderServiceImpl implements OrderService{
 		return null;
 	}
 	
-	private Order orderDtoToOrder(OrderDto orderDto) {
-		return this.modelMapper.map(orderDto, Order.class);
-	}
 
 	private OrderDto orderToOrderDto(Order order) {
 		OrderDto dto = this.modelMapper.map(order, OrderDto.class);
 		dto.setCustomerId(order.getCustomer().getCustomer_Id());
 		dto.setProductId(order.getProduct().getProductId());
 		return dto;
+	}
+	
+	public static OrderPagedResponse createOrderPagedResponse(List<OrderDto> orders, Page<Order> pageOrders) {
+		OrderPagedResponse orderPagedResponse = new OrderPagedResponse();
+		orderPagedResponse.setContents(orders);
+		orderPagedResponse.setPageNumber(pageOrders.getNumber());
+		orderPagedResponse.setPageSize(pageOrders.getSize());
+		orderPagedResponse.setTotalElements(pageOrders.getTotalElements());
+		orderPagedResponse.setLastPage(pageOrders.isLast());
+		orderPagedResponse.setTotalPages(pageOrders.getTotalPages());
+		return orderPagedResponse;
 	}
 
 
