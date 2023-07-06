@@ -11,7 +11,9 @@ import com.vrs.entities.Order;
 import com.vrs.entities.Product;
 
 public interface OrderRepo extends JpaRepository<Order, Integer> {
-//	@Query("from Order O where O.active like :key")
 	Page<Order> findByProduct(Product product, Pageable p);
+	@Query(value="SELECT o from Order o where o.active=:active and o.customer =:customer")
+	Page<Order> findByCustomerActiveOrder(@Param("customer") Customer customer, @Param("active") boolean active, Pageable p);
+	
 	Page<Order> findByCustomer(Customer customer, Pageable p);
 }

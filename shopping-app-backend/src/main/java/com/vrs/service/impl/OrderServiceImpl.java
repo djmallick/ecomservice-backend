@@ -209,7 +209,7 @@ public class OrderServiceImpl implements OrderService{
 	}
 
 	@Override
-	public OrderPagedResponse getOrdersByCustomerId(Integer pageNumber, Integer pageSize, String sortBy, String sortDir, Integer customerId, boolean onlyActive) {
+	public OrderPagedResponse getOrdersByCustomerId(Integer pageNumber, Integer pageSize, String sortBy, String sortDir, Integer customerId, Boolean active) {
 		Customer customer = customerRepo.findById(customerId).orElseThrow(()-> new ResourceNotFoundException("Customer","id", customerId));
 		Sort sort = null;
 		if(sortDir.equals("desc")) {
@@ -219,7 +219,12 @@ public class OrderServiceImpl implements OrderService{
 			sort = Sort.by(sortBy).ascending();
 		}
 		Pageable p = PageRequest.of(pageNumber, pageSize, sort);
-		Page<Order> pageOrders = orderRepo.findByCustomer(customer, p);
+		Page<Order> pageOrders = null;
+		if(active==null) {
+			pageOrders = orderRepo.findByCustomer(customer, p);
+		}else {
+			pageOrders = orderRepo.findByCustomerActiveOrder(customer, active.booleanValue(), p);
+		}
 
 		List<Order> orders = pageOrders.getContent();
 		List<OrderDto> fetchedOrders = new ArrayList<OrderDto>();
@@ -236,16 +241,12 @@ public class OrderServiceImpl implements OrderService{
 
 
 	@Override
-	public List<OrderDto> getOrdersBySellerId(Integer sellerId) {
-		// TODO Auto-generated method stub
+	public OrderPagedResponse getOrdersBySellerId(Integer pageNumber, Integer pageSize, String sortBy, String sortDir,
+			Integer customerId, Boolean active) {
+		
 		return null;
 	}
 
-	@Override
-	public List<OrderDto> getOrdersBySellerId(Integer sellerId, boolean isActive) {
-		// TODO Auto-generated method stub
-		return null;
-	}
 
 	@Override
 	public List<OrderDto> getOrdersByProductId(Integer productId) {

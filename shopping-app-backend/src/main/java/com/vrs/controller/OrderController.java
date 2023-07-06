@@ -86,10 +86,10 @@ public class OrderController {
 			@RequestParam(value="pageSize", defaultValue=AppConstants.PAGE_SIZE, required =false) Integer pageSize,
 			@RequestParam(value="sortBy", defaultValue=AppConstants.ORDER_SORT_BY, required=false) String sortBy,
 			@RequestParam(value="sortDir", defaultValue=AppConstants.SORT_DIR, required=false) String sortDir,
-			@RequestParam(value="onlyActive", defaultValue="true", required =false) boolean onlyActive,
+			@RequestParam(value="active", required =false) Boolean active,
 			@PathVariable Integer customerId
 			) {
-		OrderPagedResponse allOrders = orderService.getOrdersByCustomerId(pageNumber, pageSize, sortBy, sortDir, customerId, onlyActive);
+		OrderPagedResponse allOrders = orderService.getOrdersByCustomerId(pageNumber, pageSize, sortBy, sortDir, customerId, active);
 		return new ResponseEntity<OrderPagedResponse>(allOrders, HttpStatus.OK);	
 	}
 
