@@ -16,4 +16,7 @@ public interface OrderRepo extends JpaRepository<Order, Integer> {
 	Page<Order> findByCustomerActiveOrder(@Param("customer") Customer customer, @Param("active") boolean active, Pageable p);
 	
 	Page<Order> findByCustomer(Customer customer, Pageable p);
+	
+	Page<Order> findBySellerId(Integer sellerId, Pageable p);
+	Page<Order> findBySellerIdActiveOrder(Integer sellerId, boolean booleanValue, Pageable p);
 }
