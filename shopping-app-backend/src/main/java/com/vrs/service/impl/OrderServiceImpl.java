@@ -23,6 +23,7 @@ import com.vrs.entities.DeliveryAddress;
 import com.vrs.entities.Order;
 import com.vrs.entities.OrderStatus;
 import com.vrs.entities.Product;
+import com.vrs.entities.Seller;
 import com.vrs.exception.InvalidUpdateException;
 import com.vrs.exception.ProductOutOfStockException;
 import com.vrs.exception.ResourceNotFoundException;
@@ -242,8 +243,34 @@ public class OrderServiceImpl implements OrderService{
 
 	@Override
 	public OrderPagedResponse getOrdersBySellerId(Integer pageNumber, Integer pageSize, String sortBy, String sortDir,
-			Integer customerId, Boolean active) {
-		
+			Integer sellerId, Boolean active) {
+		Seller seller = sellerRepo.findById(sellerId).orElseThrow(()-> new ResourceNotFoundException("Seller","id", sellerId));
+		Sort sort = null;
+		if(sortDir.equals("desc")) {
+			sort = Sort.by(sortBy).descending();
+		}
+		else {
+			sort = Sort.by(sortBy).ascending();
+		}
+		Pageable p = PageRequest.of(pageNumber, pageSize, sort);
+		Page<Order> pageOrders = null;
+		if(active==null) {
+			pageOrders = orderRepo.findBySellerId(sellerId, p);
+		}else {
+			pageOrders = orderRepo.findBySellerIdActiveOrder(sellerId, active.booleanValue(), p);
+		}
+
+		List<Order> orders = pageOrders.getContent();
+		List<OrderDto> fetchedOrders = new ArrayList<OrderDto>();
+		for(Order order:orders) {
+			OrderDto fetchedOrderDto = orderToOrderDto(order);
+			DeliveryAddressDto addressDto = modelMapper.map(order.getDeliveryAddress(), DeliveryAddressDto.class);
+			fetchedOrderDto.setDeliveryAddress(addressDto);
+			fetchedOrderDto.setSellerName(order.getProduct().getSeller().getFirstName()+" "+order.getProduct().getSeller().getLastName());
+			fetchedOrderDto.setSellerMobile(order.getProduct().getSeller().getMobileNumber());
+			fetchedOrders.add(fetchedOrderDto);
+		}
+		return createOrderPagedResponse(fetchedOrders, pageOrders);
 		return null;
 	}
 
