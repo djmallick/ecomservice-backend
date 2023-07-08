@@ -13,11 +13,12 @@ public interface OrderService {
 	OrderDto updateOrderAddress(OrderDto orderDto, Integer orderId);
 	boolean deleteOrder(Integer orderId);
 	OrderDto getOrderById(Integer orderId);
-	List<OrderDto> getOrdersByProductId(Integer productId);
 	OrderPagedResponse getAllOrders(Integer pageNumber, Integer pageSize, String sortBy, String sortDir);
 	OrderPagedResponse getOrdersByCustomerId(Integer pageNumber, Integer pageSize, String sortBy, String sortDir,
 			Integer customerId, Boolean active);
 	OrderPagedResponse getOrdersBySellerId(Integer pageNumber, Integer pageSize, String sortBy, String sortDir,
 			Integer customerId, Boolean active);
+	OrderPagedResponse getOrdersByProductId(Integer pageNumber, Integer pageSize, String sortBy, String sortDir,
+			Integer productId, Boolean active);
 	
 }

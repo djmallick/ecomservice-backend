@@ -92,6 +92,32 @@ public class OrderController {
 		OrderPagedResponse allOrders = orderService.getOrdersByCustomerId(pageNumber, pageSize, sortBy, sortDir, customerId, active);
 		return new ResponseEntity<OrderPagedResponse>(allOrders, HttpStatus.OK);	
 	}
+	
+	@GetMapping("/order/product/{productId}")
+	public ResponseEntity<OrderPagedResponse> getOrdersByProductId(
+			@RequestParam(value="pageNumber", defaultValue=AppConstants.PAGE_NUMBER, required =false) Integer pageNumber,
+			@RequestParam(value="pageSize", defaultValue=AppConstants.PAGE_SIZE, required =false) Integer pageSize,
+			@RequestParam(value="sortBy", defaultValue=AppConstants.ORDER_SORT_BY, required=false) String sortBy,
+			@RequestParam(value="sortDir", defaultValue=AppConstants.SORT_DIR, required=false) String sortDir,
+			@RequestParam(value="active", required =false) Boolean active,
+			@PathVariable Integer productId
+			) {
+		OrderPagedResponse allOrders = orderService.getOrdersByProductId(pageNumber, pageSize, sortBy, sortDir, productId, active);
+		return new ResponseEntity<OrderPagedResponse>(allOrders, HttpStatus.OK);
+	}
+	
+	@GetMapping("/order/seller/{sellerId}")
+	public ResponseEntity<OrderPagedResponse> getOrdersBySellerId(
+			@RequestParam(value="pageNumber", defaultValue=AppConstants.PAGE_NUMBER, required =false) Integer pageNumber,
+			@RequestParam(value="pageSize", defaultValue=AppConstants.PAGE_SIZE, required =false) Integer pageSize,
+			@RequestParam(value="sortBy", defaultValue=AppConstants.ORDER_SORT_BY, required=false) String sortBy,
+			@RequestParam(value="sortDir", defaultValue=AppConstants.SORT_DIR, required=false) String sortDir,
+			@RequestParam(value="active", required =false) Boolean active,
+			@PathVariable Integer sellerId
+			) {
+		OrderPagedResponse allOrders = orderService.getOrdersBySellerId(pageNumber, pageSize, sortBy, sortDir, sellerId, active);
+		return new ResponseEntity<OrderPagedResponse>(allOrders, HttpStatus.OK);
+	}
 
 	
 }

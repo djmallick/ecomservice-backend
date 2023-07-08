@@ -187,57 +187,25 @@ public class OrderServiceImpl implements OrderService{
 
 	@Override
 	public OrderPagedResponse getAllOrders(Integer pageNumber, Integer pageSize, String sortBy, String sortDir) {
-		Sort sort = null;
-		if(sortDir.equals("desc")) {
-			sort = Sort.by(sortBy).descending();
-		}
-		else {
-			sort = Sort.by(sortBy).ascending();
-		}
-		Pageable p = PageRequest.of(pageNumber, pageSize, sort);
+		
+		Pageable p = getPageable(pageNumber, pageSize, sortBy, sortDir);
 		Page<Order> pageOrders = orderRepo.findAll(p);
-		List<Order> orders = pageOrders.getContent();
-		List<OrderDto> fetchedOrders = new ArrayList<OrderDto>();
-		for(Order order:orders) {
-			OrderDto fetchedOrderDto = orderToOrderDto(order);
-			DeliveryAddressDto addressDto = modelMapper.map(order.getDeliveryAddress(), DeliveryAddressDto.class);
-			fetchedOrderDto.setDeliveryAddress(addressDto);
-			fetchedOrderDto.setSellerName(order.getProduct().getSeller().getFirstName()+" "+order.getProduct().getSeller().getLastName());
-			fetchedOrderDto.setSellerMobile(order.getProduct().getSeller().getMobileNumber());
-			fetchedOrders.add(fetchedOrderDto);
-		}
-		return createOrderPagedResponse(fetchedOrders, pageOrders);
+		
+		return createOrderPagedResponse(pageOrders);
 	}
 
 	@Override
 	public OrderPagedResponse getOrdersByCustomerId(Integer pageNumber, Integer pageSize, String sortBy, String sortDir, Integer customerId, Boolean active) {
 		Customer customer = customerRepo.findById(customerId).orElseThrow(()-> new ResourceNotFoundException("Customer","id", customerId));
-		Sort sort = null;
-		if(sortDir.equals("desc")) {
-			sort = Sort.by(sortBy).descending();
-		}
-		else {
-			sort = Sort.by(sortBy).ascending();
-		}
-		Pageable p = PageRequest.of(pageNumber, pageSize, sort);
-		Page<Order> pageOrders = null;
+		
+		Pageable p = getPageable(pageNumber, pageSize, sortBy, sortDir);
+		Page<Order> pageOrders;
 		if(active==null) {
 			pageOrders = orderRepo.findByCustomer(customer, p);
 		}else {
 			pageOrders = orderRepo.findByCustomerActiveOrder(customer, active.booleanValue(), p);
 		}
-
-		List<Order> orders = pageOrders.getContent();
-		List<OrderDto> fetchedOrders = new ArrayList<OrderDto>();
-		for(Order order:orders) {
-			OrderDto fetchedOrderDto = orderToOrderDto(order);
-			DeliveryAddressDto addressDto = modelMapper.map(order.getDeliveryAddress(), DeliveryAddressDto.class);
-			fetchedOrderDto.setDeliveryAddress(addressDto);
-			fetchedOrderDto.setSellerName(order.getProduct().getSeller().getFirstName()+" "+order.getProduct().getSeller().getLastName());
-			fetchedOrderDto.setSellerMobile(order.getProduct().getSeller().getMobileNumber());
-			fetchedOrders.add(fetchedOrderDto);
-		}
-		return createOrderPagedResponse(fetchedOrders, pageOrders);
+		return createOrderPagedResponse(pageOrders);
 	}
 
 
@@ -245,40 +213,34 @@ public class OrderServiceImpl implements OrderService{
 	public OrderPagedResponse getOrdersBySellerId(Integer pageNumber, Integer pageSize, String sortBy, String sortDir,
 			Integer sellerId, Boolean active) {
 		Seller seller = sellerRepo.findById(sellerId).orElseThrow(()-> new ResourceNotFoundException("Seller","id", sellerId));
-		Sort sort = null;
-		if(sortDir.equals("desc")) {
-			sort = Sort.by(sortBy).descending();
-		}
-		else {
-			sort = Sort.by(sortBy).ascending();
-		}
-		Pageable p = PageRequest.of(pageNumber, pageSize, sort);
-		Page<Order> pageOrders = null;
+		
+		Pageable p = getPageable(pageNumber, pageSize, sortBy, sortDir);
+		Page<Order> pageOrders;
 		if(active==null) {
-			pageOrders = orderRepo.findBySellerId(sellerId, p);
+			pageOrders = orderRepo.findBySeller(seller, p);
 		}else {
-			pageOrders = orderRepo.findBySellerIdActiveOrder(sellerId, active.booleanValue(), p);
+			pageOrders = orderRepo.findBySellerActiveOrder(seller, active.booleanValue(), p);
 		}
 
-		List<Order> orders = pageOrders.getContent();
-		List<OrderDto> fetchedOrders = new ArrayList<OrderDto>();
-		for(Order order:orders) {
-			OrderDto fetchedOrderDto = orderToOrderDto(order);
-			DeliveryAddressDto addressDto = modelMapper.map(order.getDeliveryAddress(), DeliveryAddressDto.class);
-			fetchedOrderDto.setDeliveryAddress(addressDto);
-			fetchedOrderDto.setSellerName(order.getProduct().getSeller().getFirstName()+" "+order.getProduct().getSeller().getLastName());
-			fetchedOrderDto.setSellerMobile(order.getProduct().getSeller().getMobileNumber());
-			fetchedOrders.add(fetchedOrderDto);
-		}
-		return createOrderPagedResponse(fetchedOrders, pageOrders);
-		return null;
+		return createOrderPagedResponse(pageOrders);
 	}
 
 
 	@Override
-	public List<OrderDto> getOrdersByProductId(Integer productId) {
-		// TODO Auto-generated method stub
-		return null;
+	public OrderPagedResponse getOrdersByProductId(Integer pageNumber, Integer pageSize, String sortBy, String sortDir,
+			Integer productId, Boolean active) {
+		Product product = productRepo.findById(productId).orElseThrow(()-> new ResourceNotFoundException("Product","id", productId));
+		
+		Pageable p = getPageable(pageNumber, pageSize, sortBy, sortDir);
+		Page<Order> pageOrders;
+		if(active==null) {
+			pageOrders = orderRepo.findByProduct(product, p);
+		}else {
+			System.out.println("===================>"+active.booleanValue());
+			pageOrders = orderRepo.findByProductActiveOrder(product, active.booleanValue(), p);
+		}
+
+		return createOrderPagedResponse(pageOrders);
 	}
 	
 
@@ -289,9 +251,19 @@ public class OrderServiceImpl implements OrderService{
 		return dto;
 	}
 	
-	public static OrderPagedResponse createOrderPagedResponse(List<OrderDto> orders, Page<Order> pageOrders) {
+	public OrderPagedResponse createOrderPagedResponse(Page<Order> pageOrders) {
+		List<Order> orders = pageOrders.getContent();
+		List<OrderDto> fetchedOrders = new ArrayList<OrderDto>();
+		for(Order order:orders) {
+			OrderDto fetchedOrderDto = orderToOrderDto(order);
+			DeliveryAddressDto addressDto = modelMapper.map(order.getDeliveryAddress(), DeliveryAddressDto.class);
+			fetchedOrderDto.setDeliveryAddress(addressDto);
+			fetchedOrderDto.setSellerName(order.getProduct().getSeller().getFirstName()+" "+order.getProduct().getSeller().getLastName());
+			fetchedOrderDto.setSellerMobile(order.getProduct().getSeller().getMobileNumber());
+			fetchedOrders.add(fetchedOrderDto);
+		}
 		OrderPagedResponse orderPagedResponse = new OrderPagedResponse();
-		orderPagedResponse.setContents(orders);
+		orderPagedResponse.setContents(fetchedOrders);
 		orderPagedResponse.setPageNumber(pageOrders.getNumber());
 		orderPagedResponse.setPageSize(pageOrders.getSize());
 		orderPagedResponse.setTotalElements(pageOrders.getTotalElements());
@@ -301,7 +273,19 @@ public class OrderServiceImpl implements OrderService{
 		orderPagedResponse.setMessage("Fetched successfully");
 		return orderPagedResponse;
 	}
-
+	
+	public Pageable getPageable(Integer pageNumber, Integer pageSize, String sortBy, String sortDir) {
+		Sort sort = null;
+		if(sortDir.equals("desc")) {
+			sort = Sort.by(sortBy).descending();
+		}
+		else {
+			sort = Sort.by(sortBy).ascending();
+		}
+		return PageRequest.of(pageNumber, pageSize, sort);
+		
+	}
+	
 
 
 
