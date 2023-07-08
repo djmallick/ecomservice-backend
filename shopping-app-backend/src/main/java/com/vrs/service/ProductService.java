@@ -21,4 +21,6 @@ public interface ProductService {
 	
 	ProductResponse searchProducts(String keyword, Integer pageNumber, Integer pageSize, String sortBy,
 			String sortDir);
+
+	ProductDto activateProduct(Integer productId, boolean active);
 }

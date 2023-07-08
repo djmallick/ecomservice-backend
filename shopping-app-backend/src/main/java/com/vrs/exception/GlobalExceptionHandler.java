@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import com.vrs.payload.ApiResponse;
 import com.vrs.payload.OrderResponse;
+import com.vrs.payload.ReviewResponse;
 
 
 @RestControllerAdvice
@@ -62,5 +63,12 @@ public class GlobalExceptionHandler {
 		String message = ex.getMessage();
 		OrderResponse orderResponse = new OrderResponse(false, message, null);
 		return new ResponseEntity<OrderResponse> (orderResponse,HttpStatus.NOT_IMPLEMENTED);
+	}
+	
+	@ExceptionHandler(InvalidReviewCreationException.class)
+	public ResponseEntity<ReviewResponse> invalidReviewCreationExceptionHandler(InvalidReviewCreationException ex){
+		String message = ex.getMessage();
+		ReviewResponse reviewResponse = new ReviewResponse(false, message, null);
+		return new ResponseEntity<ReviewResponse> (reviewResponse,HttpStatus.NOT_IMPLEMENTED);
 	}
 }

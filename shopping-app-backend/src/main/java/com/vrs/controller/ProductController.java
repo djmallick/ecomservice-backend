@@ -41,6 +41,18 @@ public class ProductController {
 		return new ResponseEntity<ProductDto>(updatedProduct, HttpStatus.OK);	
 	}
 	
+	@PutMapping("/product/activate/{productId}")
+	public ResponseEntity<ProductDto> activateProduct(@PathVariable Integer productId) {
+		ProductDto updatedProduct = productService.activateProduct(productId, true);
+		return new ResponseEntity<ProductDto>(updatedProduct, HttpStatus.OK);	
+	}
+	
+	@PutMapping("/product/deactivate/{productId}")
+	public ResponseEntity<ProductDto> deactivateProduct(@PathVariable Integer productId) {
+		ProductDto updatedProduct = productService.activateProduct(productId, false);
+		return new ResponseEntity<ProductDto>(updatedProduct, HttpStatus.OK);	
+	}
+	
 	@DeleteMapping("/product/{productId}")
 	public ResponseEntity<ApiResponse> deleteProduct(@PathVariable Integer productId) {
 		boolean isDeleted = productService.deleteProduct(productId);

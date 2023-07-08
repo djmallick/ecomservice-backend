@@ -32,7 +32,6 @@ public class ProductDto {
 	private SellerDto sellerDto;
 	private CategoryDto categoryDto;	
 	private double averageRating;
-	private List<OrderDto> orderDtos = new ArrayList<>();
 	public int getProductId() {
 		return productId;
 	}
@@ -92,12 +91,6 @@ public class ProductDto {
 	}
 	public void setAverageRating(double averageRating) {
 		this.averageRating = averageRating;
-	}
-	public List<OrderDto> getOrderDtos() {
-		return orderDtos;
-	}
-	public void setOrderDtos(List<OrderDto> orderDtos) {
-		this.orderDtos = orderDtos;
 	}
 	
 }

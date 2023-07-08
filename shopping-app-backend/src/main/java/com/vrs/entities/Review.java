@@ -1,5 +1,7 @@
 package com.vrs.entities;
 
+import java.util.Date;
+
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -20,7 +22,8 @@ public class Review {
 	@Column(name = "review_id")
 	private int reviewId;
 	private String description;
-	private int rating;
+	private byte rating;
+	private Date dateOfReview;
 
 	@ManyToOne
 	@JoinColumn(name ="customer_id")
@@ -29,6 +32,8 @@ public class Review {
 	@OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "order_id")
 	private Order order;
+	
+	
 
 	public int getReviewId() {
 		return reviewId;
@@ -46,12 +51,38 @@ public class Review {
 		this.description = description;
 	}
 
-	public int getRating() {
+	public byte getRating() {
 		return rating;
 	}
 
-	public void setRating(int rating) {
+	public void setRating(byte rating) {
 		this.rating = rating;
 	}
+
+	public Date getDateOfReview() {
+		return dateOfReview;
+	}
+
+	public void setDateOfReview(Date dateOfReview) {
+		this.dateOfReview = dateOfReview;
+	}
+
+	public Customer getCustomer() {
+		return customer;
+	}
+
+	public void setCustomer(Customer customer) {
+		this.customer = customer;
+	}
+
+	public Order getOrder() {
+		return order;
+	}
+
+	public void setOrder(Order order) {
+		this.order = order;
+	}
+	
+	
 	
 }

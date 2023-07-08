@@ -61,7 +61,7 @@ public class OrderServiceImpl implements OrderService{
 	public OrderDto createOrder(OrderDto orderDto) {
 		Product product = productRepo.findById(orderDto.getProductId()).orElseThrow(()-> new ResourceNotFoundException("Product","id", orderDto.getProductId()));
 		Customer customer = customerRepo.findById(orderDto.getCustomerId()).orElseThrow(()-> new ResourceNotFoundException("Customer","id", orderDto.getCustomerId()));
-		if(product.getStock()>0) {
+		if(product.getStock()>0 && product.isActive()) {
 			if(product.getStock()-orderDto.getQuantity()>0) {
 				Order order = new Order();
 				DeliveryAddress address = modelMapper.map(orderDto.getDeliveryAddress(), DeliveryAddress.class);

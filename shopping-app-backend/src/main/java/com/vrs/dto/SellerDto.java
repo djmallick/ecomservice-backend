@@ -27,9 +27,6 @@ public class SellerDto {
 	
 	private Date dateOfBirth;
 	
-	private List<ProductDto> productDtos = new ArrayList<>();
-
-	
 	public UserDto getUserDto() {
 		return userDto;
 	}
@@ -38,13 +35,6 @@ public class SellerDto {
 		this.userDto = userDto;
 	}
 
-	public List<ProductDto> getProductDtos() {
-		return productDtos;
-	}
-
-	public void setProductDtos(List<ProductDto> productDtos) {
-		this.productDtos = productDtos;
-	}
 
 	public int getSellerId() {
 		return sellerId;

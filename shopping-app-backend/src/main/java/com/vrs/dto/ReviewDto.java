@@ -1,12 +1,41 @@
 package com.vrs.dto;
 
+import java.util.Date;
+
+import javax.validation.constraints.Max;
+import javax.validation.constraints.Min;
+import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.NotNull;
+
 public class ReviewDto {
 	
 	private int reviewId;
+	
+	@NotEmpty(message = "Must not be empty")
+	@NotNull
 	private String description;
-	private int rating;
-	private CustomerDto customer;
-	private OrderDto order;
+	
+	@Min(1)
+	@Max(5)
+	@NotNull
+	private byte rating;
+	
+	private String customerName;
+	private Date dateOfReview;
+	
+	
+	public String getCustomerName() {
+		return customerName;
+	}
+	public void setCustomerName(String customerName) {
+		this.customerName = customerName;
+	}
+	public Date getDateOfReview() {
+		return dateOfReview;
+	}
+	public void setDateOfReview(Date dateOfReview) {
+		this.dateOfReview = dateOfReview;
+	}
 	public int getReviewId() {
 		return reviewId;
 	}
@@ -19,23 +48,16 @@ public class ReviewDto {
 	public void setDescription(String description) {
 		this.description = description;
 	}
-	public int getRating() {
+	public byte getRating() {
 		return rating;
 	}
-	public void setRating(int rating) {
+	public void setRating(byte rating) {
 		this.rating = rating;
 	}
-	public CustomerDto getCustomer() {
-		return customer;
-	}
-	public void setCustomer(CustomerDto customer) {
-		this.customer = customer;
-	}
-	public OrderDto getOrder() {
-		return order;
-	}
-	public void setOrder(OrderDto order) {
-		this.order = order;
+	@Override
+	public String toString() {
+		return "ReviewDto [reviewId=" + reviewId + ", description=" + description + ", rating=" + rating
+				+ ", customerName=" + customerName + ", dateOfReview=" + dateOfReview + "]";
 	}
 	
 	

@@ -91,6 +91,19 @@ public class ProductServiceImpl implements ProductService {
 		pd.setCategoryDto(categoryDto);
 		return pd;	
 	}
+	
+	@Override
+	public ProductDto activateProduct(Integer productId, boolean active) {
+		Product product = productRepo.findById(productId).orElseThrow(()-> new ResourceNotFoundException("Seller","id", productId));
+		product.setActive(active);
+		Product updatedProduct = productRepo.save(product);
+		SellerDto sellerDto = modelMapper.map(updatedProduct.getSeller(), SellerDto.class);
+		CategoryDto categoryDto = modelMapper.map(updatedProduct.getCategory(), CategoryDto.class);
+		ProductDto pd = modelMapper.map(updatedProduct, ProductDto.class);
+		pd.setSellerDto(sellerDto);
+		pd.setCategoryDto(categoryDto);
+		return pd;	
+	}
 
 	@Override
 	public ProductDto getProductByProductId(Integer productId) {
