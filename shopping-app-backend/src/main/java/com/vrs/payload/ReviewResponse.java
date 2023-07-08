@@ -6,7 +6,7 @@ public class ReviewResponse {
 	
 	boolean isSuccessful;
 	String message;
-	ReviewDto reviewDto;
+	ReviewDto review;
 	
 	public boolean isSuccessful() {
 		return isSuccessful;
@@ -20,26 +20,19 @@ public class ReviewResponse {
 	public void setMessage(String message) {
 		this.message = message;
 	}
-	public ReviewDto getReviewDto() {
-		return reviewDto;
+	
+	
+	public ReviewDto getReview() {
+		return review;
 	}
-	public void setReviewDto(ReviewDto reviewDto) {
-		this.reviewDto = reviewDto;
+	public void setReview(ReviewDto review) {
+		this.review = review;
 	}
-	
-	
-	
 	public ReviewResponse(boolean isSuccessful, String message, ReviewDto reviewDto) {
 		super();
 		this.isSuccessful = isSuccessful;
 		this.message = message;
-		this.reviewDto = reviewDto;
+		this.review = reviewDto;
 	}
-	@Override
-	public String toString() {
-		return "ReviewResponse [isSuccessful=" + isSuccessful + ", message=" + message + ", reviewDto=" + reviewDto
-				+ ", isSuccessful()=" + isSuccessful() + ", getMessage()=" + getMessage() + ", getReviewDto()="
-				+ getReviewDto() + ", getClass()=" + getClass() + ", hashCode()=" + hashCode() + ", toString()="
-				+ super.toString() + "]";
-	}
+
 }

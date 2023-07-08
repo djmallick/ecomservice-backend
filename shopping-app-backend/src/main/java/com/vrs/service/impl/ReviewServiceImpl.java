@@ -57,6 +57,11 @@ public class ReviewServiceImpl implements ReviewService {
 		if(!order.getStatus().equals(OrderStatus.DELIVERED)) {
 			throw new InvalidReviewCreationException("Review","Order status should be delivered");
 		}
+		
+		if(reviewRepo.findByOrder(order)!=null) {
+			throw new InvalidReviewCreationException("Review","Review already submitted for this order");
+		}
+		
 		Review review = new Review();
 		review.setCustomer(order.getCustomer());
 		review.setOrder(order);
@@ -134,6 +139,7 @@ public class ReviewServiceImpl implements ReviewService {
 		reviewDto.setDescription(review.getDescription());
 		reviewDto.setDateOfReview(review.getDateOfReview());
 		reviewDto.setRating(review.getRating());
+		reviewDto.setReviewId(review.getReviewId());
 		reviewDto.setCustomerName(review.getCustomer().getFirstName()+" "+review.getCustomer().getLastName());
 		return reviewDto;
 	}
