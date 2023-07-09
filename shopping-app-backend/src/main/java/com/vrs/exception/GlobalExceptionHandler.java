@@ -62,13 +62,13 @@ public class GlobalExceptionHandler {
 	public ResponseEntity<OrderResponse> invalidUpdateExceptionHandler(InvalidUpdateException ex){
 		String message = ex.getMessage();
 		OrderResponse orderResponse = new OrderResponse(false, message, null);
-		return new ResponseEntity<OrderResponse> (orderResponse,HttpStatus.NOT_IMPLEMENTED);
+		return new ResponseEntity<OrderResponse> (orderResponse,HttpStatus.BAD_REQUEST);
 	}
 	
 	@ExceptionHandler(InvalidReviewCreationException.class)
 	public ResponseEntity<ReviewResponse> invalidReviewCreationExceptionHandler(InvalidReviewCreationException ex){
 		String message = ex.getMessage();
 		ReviewResponse reviewResponse = new ReviewResponse(false, message, null);
-		return new ResponseEntity<ReviewResponse> (reviewResponse,HttpStatus.NOT_IMPLEMENTED);
+		return new ResponseEntity<ReviewResponse> (reviewResponse,HttpStatus.BAD_REQUEST);
 	}
 }

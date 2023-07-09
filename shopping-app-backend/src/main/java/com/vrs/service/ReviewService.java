@@ -7,11 +7,11 @@ import com.vrs.payload.ReviewResponse;
 public interface ReviewService {
 	ReviewResponse createReview(ReviewDto reviewDto, Integer orderId);
 	ReviewResponse updateReview(Integer reviewId,ReviewDto reviewDto);
-	ReviewResponse deleteReview(Integer reviewId);
+	boolean deleteReview(Integer reviewId);
 	
-	ReviewPagedResponse getReviewById(Integer reviewId);
+	ReviewResponse getReviewById(Integer reviewId);
 	
-	ReviewPagedResponse getReviewByOrderId(Integer orderId);
+	ReviewResponse getReviewByOrderId(Integer orderId);
 	
 	ReviewPagedResponse getReviewByProductId(Integer productId);
 	

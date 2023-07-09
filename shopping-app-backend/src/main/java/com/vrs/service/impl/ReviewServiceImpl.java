@@ -3,6 +3,7 @@ package com.vrs.service.impl;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.Date;
+import java.util.Optional;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -58,7 +59,7 @@ public class ReviewServiceImpl implements ReviewService {
 			throw new InvalidReviewCreationException("Review","Order status should be delivered");
 		}
 		
-		if(reviewRepo.findByOrder(order)!=null) {
+		if(!reviewRepo.findByOrder(order).isEmpty()) {
 			throw new InvalidReviewCreationException("Review","Review already submitted for this order");
 		}
 		
@@ -70,32 +71,43 @@ public class ReviewServiceImpl implements ReviewService {
 		review.setDescription(reviewDto.getDescription());
 		
 		Review savedReview = reviewRepo.save(review);
-		updateProductRating(order.getProduct().getProductId(), savedReview.getRating());
+		updateProductRating(savedReview);
 		return new ReviewResponse(true, "Review submitted successfully", reviewToReviewDto(savedReview));
 	}
 
 	@Override
 	public ReviewResponse updateReview(Integer reviewId, ReviewDto reviewDto) {
-		// TODO Auto-generated method stub
-		return null;
+		Review review = reviewRepo.findById(reviewId).orElseThrow(()-> new ResourceNotFoundException("Review","id", reviewId));
+		review.setDescription(reviewDto.getDescription());
+		review.setDateOfReview(new Date());
+		review.setRating(reviewDto.getRating());
+		Review updatedReview = reviewRepo.save(review);
+		updateProductRating(updatedReview);
+		return new ReviewResponse(true, "Review updated successfully", reviewToReviewDto(updatedReview));
 	}
 
 	@Override
-	public ReviewResponse deleteReview(Integer reviewId) {
-		// TODO Auto-generated method stub
-		return null;
+	public boolean deleteReview(Integer reviewId) {
+		Review review = reviewRepo.findById(reviewId).orElseThrow(()-> new ResourceNotFoundException("Review","id", reviewId));
+		reviewRepo.delete(review);
+		Optional<Review> deletedReview = reviewRepo.findById(reviewId);
+		if(deletedReview.isEmpty()) {
+			updateProductRating(review);
+		}
+		return deletedReview.isEmpty();
 	}
 
 	@Override
-	public ReviewPagedResponse getReviewById(Integer reviewId) {
-		// TODO Auto-generated method stub
-		return null;
+	public ReviewResponse getReviewById(Integer reviewId) {
+		Review review = reviewRepo.findById(reviewId).orElseThrow(()-> new ResourceNotFoundException("Review","id", reviewId));
+		return new ReviewResponse(true, "Review fetched successfully", reviewToReviewDto(review));
 	}
 
 	@Override
-	public ReviewPagedResponse getReviewByOrderId(Integer orderId) {
-		// TODO Auto-generated method stub
-		return null;
+	public ReviewResponse getReviewByOrderId(Integer orderId) {
+		Order order = orderRepo.findById(orderId).orElseThrow(()-> new ResourceNotFoundException("Order","id", orderId));
+		Review review = reviewRepo.findByOrder(order).orElseThrow(()-> new ResourceNotFoundException("Review","order id", orderId));
+		return new ReviewResponse(true, "Review fetched successfully", reviewToReviewDto(review));
 	}
 
 	@Override
@@ -117,21 +129,20 @@ public class ReviewServiceImpl implements ReviewService {
 	}
 
 	
-	public void updateProductRating(int productId, byte customerRating) {
-		if(customerRating>=1 && customerRating<=5) {
-			Product product = productRepo.findById(productId).orElseThrow(()-> new ResourceNotFoundException("Product","id", productId));
-			double averageRating = product.getAverageRating();
-			if(averageRating==0) {
-				averageRating = customerRating;
-			} else {
-				averageRating = ((averageRating + customerRating))/2;
-			}
+	
+	private void updateProductRating(Review review) {
+		Product product = review.getOrder().getProduct();
+		Double averageRating = reviewRepo.findAverageRatingByProduct(product);
+		if(averageRating==null) {
+			product.setAverageRating(BigDecimal.valueOf(0)
+				    .setScale(1, RoundingMode.HALF_UP)
+				    .doubleValue());
+		}else {
 			product.setAverageRating(BigDecimal.valueOf(averageRating)
 				    .setScale(1, RoundingMode.HALF_UP)
 				    .doubleValue());
-			
-			productRepo.save(product);
 		}
+		productRepo.save(product);
 	}
 	
 	public ReviewDto reviewToReviewDto(Review review) {
