@@ -348,10 +348,21 @@ public class OrderServiceImpl implements OrderService{
 	public List<OrderCancellationRequestDto> getCancellationRequestDetails(Integer userId) {
 		Seller seller = this.sellerRepo.findById(userId).orElseThrow(()-> new ResourceNotFoundException("Seller ","id ", userId));
 		List<OrderCancellationRequest> cancellationRequests = orderCancellationRequestRepo.findBySeller(seller);
-		return cancellationRequests.stream().map(cancellationRequest->modelMapper.map(cancellationRequest, OrderCancellationRequestDto.class)).collect(Collectors.toList());
+		return cancellationRequests.stream().map(cancellationRequest->orderCancellationRequestToDto(cancellationRequest)).collect(Collectors.toList());
 		
 	}
 	
+	private OrderCancellationRequestDto orderCancellationRequestToDto(OrderCancellationRequest orderCancellationRequest) {
+		OrderCancellationRequestDto dto = new OrderCancellationRequestDto();
+		dto.setActive(orderCancellationRequest.isActive());
+		dto.setCancelled(orderCancellationRequest.isCancelled());
+		dto.setDateOfRequest(orderCancellationRequest.getDateOfRequest());
+		dto.setDateOfReview(orderCancellationRequest.getDateOfReview());
+		dto.setCancellationRequestId(orderCancellationRequest.getCancellationRequestId());
+		dto.setReasonOfCancellation(orderCancellationRequest.getReasonOfCancellation());
+		dto.setOrderId(orderCancellationRequest.getOrder().getOrderId());
+		return dto;
+	}
 	
 	
 }

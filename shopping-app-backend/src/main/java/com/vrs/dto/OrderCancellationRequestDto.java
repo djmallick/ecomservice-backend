@@ -16,6 +16,7 @@ public class OrderCancellationRequestDto {
 	private Date dateOfReview;
 	private boolean isActive;
 	private boolean isCancelled;
+	private int orderId;
 
 	public String getReasonOfCancellation() {
 		return reasonOfCancellation;
@@ -52,6 +53,12 @@ public class OrderCancellationRequestDto {
 	}
 	public void setCancelled(boolean isCancelled) {
 		this.isCancelled = isCancelled;
+	}
+	public int getOrderId() {
+		return orderId;
+	}
+	public void setOrderId(int orderId) {
+		this.orderId = orderId;
 	}
 	
 	
