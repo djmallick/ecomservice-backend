@@ -17,10 +17,12 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import com.vrs.dto.DeliveryAddressDto;
+import com.vrs.dto.OrderCancellationRequestDto;
 import com.vrs.dto.OrderDto;
 import com.vrs.entities.Customer;
 import com.vrs.entities.DeliveryAddress;
 import com.vrs.entities.Order;
+import com.vrs.entities.OrderCancellationRequest;
 import com.vrs.entities.OrderStatus;
 import com.vrs.entities.Product;
 import com.vrs.entities.Seller;
@@ -29,6 +31,7 @@ import com.vrs.exception.ProductOutOfStockException;
 import com.vrs.exception.ResourceNotFoundException;
 import com.vrs.payload.OrderPagedResponse;
 import com.vrs.repositories.CustomerRepo;
+import com.vrs.repositories.OrderCancellationRequestRepo;
 import com.vrs.repositories.OrderRepo;
 import com.vrs.repositories.ProductRepo;
 import com.vrs.repositories.SellerRepo;
@@ -54,6 +57,9 @@ public class OrderServiceImpl implements OrderService{
 	ProductRepo productRepo;
 	
 	@Autowired
+	OrderCancellationRequestRepo orderCancellationRequestRepo;
+	
+	@Autowired
 	ModelMapper modelMapper;
 	
 
@@ -67,7 +73,7 @@ public class OrderServiceImpl implements OrderService{
 				DeliveryAddress address = modelMapper.map(orderDto.getDeliveryAddress(), DeliveryAddress.class);
 				order.setActive(true);
 				order.setOrderDate(new Date());
-				order.setStatus(OrderStatus.ACCEPTED);
+				order.setStatus(OrderStatus.PLACED);
 				order.setDeliveryAddress(address);
 				order.setProduct(product);
 				order.setCustomer(customer);
@@ -95,15 +101,14 @@ public class OrderServiceImpl implements OrderService{
 	@Override
 	public OrderDto updateOrderAddress(OrderDto orderDto, Integer orderId) {
 		Order order = orderRepo.findById(orderId).orElseThrow(()-> new ResourceNotFoundException("Order","id", orderId));
-		
-		if(order.getStatus().equals(OrderStatus.ACCEPTED)) {
+		if(order.getStatus().equals(OrderStatus.PLACED)||order.getStatus().equals(OrderStatus.ACCEPTED)) {
 			Instant start = order.getOrderDate().toInstant();
 			Instant stop = new Date().toInstant();
-			Instant target = start.plus( 24 , ChronoUnit.HOURS );
+			Instant target = start.plus( 48 , ChronoUnit.HOURS );
 			if(!stop.isAfter( target )) {
 				changeAddress(orderDto.getDeliveryAddress(), order.getDeliveryAddress());
 			} else {
-				throw new InvalidUpdateException("Order address for ", orderId,"Address can be updated till 24 hours");
+				throw new InvalidUpdateException("Order address for ", orderId,"Address can be updated till 48 hours");
 			}
 		} else {
 			throw new InvalidUpdateException("Order address for ", orderId,"order is already shipped or delivered");
@@ -132,9 +137,10 @@ public class OrderServiceImpl implements OrderService{
 	@Override
 	public OrderDto updateOrderStatus(OrderDto orderDto, Integer orderId) {
 		Order order = orderRepo.findById(orderId).orElseThrow(()-> new ResourceNotFoundException("Order","id", orderId));
-		//Updating order status by seller
-		if(orderDto.getStatus()!= null) {
+
+		if(orderDto.getStatus()!= null && !(order.getStatus().equals((OrderStatus.DELIVERED))||order.getStatus().equals((OrderStatus.CANCELLED)))) {
 			String status = orderDto.getStatus();
+			
 			if(status.equals("accepted")) {
 				order.setStatus(OrderStatus.ACCEPTED);
 				order.setActive(true);
@@ -145,13 +151,25 @@ public class OrderServiceImpl implements OrderService{
 				order.setStatus(OrderStatus.DELIVERED);
 				order.setActive(false);
 			} else if(status.equals("cancelled")) {
+				if(order.getStatus().equals((OrderStatus.CANCEL_REQUESTED))) {
+					OrderCancellationRequest orderCancellationRequest = orderCancellationRequestRepo.findByOrder(order);
+					orderCancellationRequest.setDateOfReview(new Date());
+					orderCancellationRequest.setCancelled(true);
+					orderCancellationRequest.setActive(false);
+					orderCancellationRequestRepo.save(orderCancellationRequest);
+				}
 				order.setStatus(OrderStatus.CANCELLED);
+				int newStock = order.getProduct().getStock()+order.getQuantity();
+				order.getProduct().setStock(newStock);
 				order.setActive(false);
+			}else if(status.equals("requestedCancelled")) {
+				order.setStatus(OrderStatus.CANCEL_REQUESTED);
+				order.setActive(true);
 			} else {
 				throw new InvalidUpdateException("Order status for ID ", orderId,"status is invalid"); 
 			}
 		} else {
-			throw new InvalidUpdateException("Order status for ID ", orderId,"status should be not null"); 
+			throw new InvalidUpdateException("Order status for ID ", orderId,"status is either null or already delivered or cancelled"); 
 		}
 		
 		Order updatedOrder = orderRepo.save(order);
@@ -162,6 +180,47 @@ public class OrderServiceImpl implements OrderService{
 		DeliveryAddressDto addressDto = modelMapper.map(updatedOrder.getDeliveryAddress(), DeliveryAddressDto.class);
 		updatedOrderDto.setDeliveryAddress(addressDto);
 		return updatedOrderDto;
+		
+	}
+	
+
+	//Order cancellation rule ->
+	//Customer will try to cancel the order
+	//If status is placed, order will be cancelled automatically
+	//If status is acceped, seller will review the cancellation request and will cancel it
+	//Order cannot be cancelled if status is shipped or delivered. 
+	//Order once cancelled, status can not be changed again
+	
+	@Override
+	public OrderCancellationRequestDto requestForCancelOrder(OrderCancellationRequestDto request, Integer orderId) {
+		Order order = orderRepo.findById(orderId).orElseThrow(()-> new ResourceNotFoundException("Order","id", orderId));
+		OrderDto orderDto = new OrderDto();
+		if(order.getStatus().equals((OrderStatus.PLACED))) {
+			OrderCancellationRequest cancellationRequest = new OrderCancellationRequest();
+			cancellationRequest.setActive(false);
+			cancellationRequest.setDateOfRequest(new Date());
+			cancellationRequest.setDateOfReview(cancellationRequest.getDateOfRequest());
+			cancellationRequest.setCancelled(true);
+			cancellationRequest.setReasonOfCancellation(request.getReasonOfCancellation());
+			cancellationRequest.setOrder(order);
+			OrderCancellationRequest orderCancellationRequest = orderCancellationRequestRepo.save(cancellationRequest);
+			orderDto.setStatus("cancelled");
+			updateOrderStatus(orderDto, orderId);
+			return modelMapper.map(orderCancellationRequest, OrderCancellationRequestDto.class);
+			
+		} else if(order.getStatus().equals((OrderStatus.ACCEPTED))) {
+			OrderCancellationRequest cancellationRequest = new OrderCancellationRequest();
+			cancellationRequest.setActive(true);
+			cancellationRequest.setDateOfRequest(new Date());
+			cancellationRequest.setOrder(order);
+			OrderCancellationRequest orderCancellationRequest = orderCancellationRequestRepo.save(cancellationRequest);
+			cancellationRequest.setReasonOfCancellation(request.getReasonOfCancellation());
+			orderDto.setStatus("requestedCancelled");
+			updateOrderStatus(orderDto, orderId);
+			return modelMapper.map(orderCancellationRequest, OrderCancellationRequestDto.class);
+		}else {
+			throw new InvalidUpdateException("Order status for ID ", orderId,"status should be placed or accepted for cancellation"); 
+		}
 		
 	}
 

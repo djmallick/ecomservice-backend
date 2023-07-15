@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.vrs.config.AppConstants;
+import com.vrs.dto.OrderCancellationRequestDto;
 import com.vrs.dto.OrderDto;
 import com.vrs.payload.OrderPagedResponse;
 import com.vrs.payload.OrderResponse;
@@ -117,6 +118,13 @@ public class OrderController {
 			) {
 		OrderPagedResponse allOrders = orderService.getOrdersBySellerId(pageNumber, pageSize, sortBy, sortDir, sellerId, active);
 		return new ResponseEntity<OrderPagedResponse>(allOrders, HttpStatus.OK);
+	}
+	
+	@PostMapping("/order/{orderId}/cancel")
+	public ResponseEntity<OrderCancellationRequestDto> cancellOrder(
+			@Valid @RequestBody OrderCancellationRequestDto orderCancellationRequestDto, @PathVariable Integer orderId) {
+		OrderCancellationRequestDto requestForCancelOrder = orderService.requestForCancelOrder(orderCancellationRequestDto, orderId);
+		return new ResponseEntity<OrderCancellationRequestDto>(requestForCancelOrder, HttpStatus.CREATED);	
 	}
 
 	

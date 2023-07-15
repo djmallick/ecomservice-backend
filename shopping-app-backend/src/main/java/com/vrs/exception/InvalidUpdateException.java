@@ -6,7 +6,7 @@ public class InvalidUpdateException extends RuntimeException {
 	private String message;
 	
 	public InvalidUpdateException(String entity, int entityId, String message) {
-		super(String.format("%s ID: %s - Can not be updated - %s",entity, entityId, message));
+		super(String.format("%s ID: %s - Can not be modifed - %s",entity, entityId, message));
 		this.entity= entity;
 		this.entityId = entityId;
 		this.message = message;
