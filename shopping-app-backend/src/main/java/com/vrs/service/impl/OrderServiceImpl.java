@@ -6,7 +6,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
-
+import java.util.stream.Collectors;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -295,7 +295,6 @@ public class OrderServiceImpl implements OrderService{
 		if(active==null) {
 			pageOrders = orderRepo.findByProduct(product, p);
 		}else {
-			System.out.println("===================>"+active.booleanValue());
 			pageOrders = orderRepo.findByProductActiveOrder(product, active.booleanValue(), p);
 		}
 
@@ -345,7 +344,14 @@ public class OrderServiceImpl implements OrderService{
 		
 	}
 	
-
-
-
+	@Override
+	public List<OrderCancellationRequestDto> getCancellationRequestDetails(Integer userId) {
+		Seller seller = this.sellerRepo.findById(userId).orElseThrow(()-> new ResourceNotFoundException("Seller ","id ", userId));
+		List<OrderCancellationRequest> cancellationRequests = orderCancellationRequestRepo.findBySeller(seller);
+		return cancellationRequests.stream().map(cancellationRequest->modelMapper.map(cancellationRequest, OrderCancellationRequestDto.class)).collect(Collectors.toList());
+		
+	}
+	
+	
+	
 }

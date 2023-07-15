@@ -21,5 +21,6 @@ public interface OrderService {
 	OrderPagedResponse getOrdersByProductId(Integer pageNumber, Integer pageSize, String sortBy, String sortDir,
 			Integer productId, Boolean active);
 	OrderCancellationRequestDto requestForCancelOrder(OrderCancellationRequestDto request, Integer orderId);
+	List<OrderCancellationRequestDto> getCancellationRequestDetails(Integer userId);
 	
 }

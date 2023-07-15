@@ -1,5 +1,7 @@
 package com.vrs.controller;
 
+import java.util.List;
+
 import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -126,6 +128,10 @@ public class OrderController {
 		OrderCancellationRequestDto requestForCancelOrder = orderService.requestForCancelOrder(orderCancellationRequestDto, orderId);
 		return new ResponseEntity<OrderCancellationRequestDto>(requestForCancelOrder, HttpStatus.CREATED);	
 	}
-
 	
+	@GetMapping("/order/cancellationRequest/seller/{sellerId}")
+	public ResponseEntity<List<OrderCancellationRequestDto>> getOrderCancellationRequestsForSeller(@PathVariable Integer sellerId) {
+		return new ResponseEntity<>(orderService.getCancellationRequestDetails(sellerId), HttpStatus.OK);	
+	}
+
 }
