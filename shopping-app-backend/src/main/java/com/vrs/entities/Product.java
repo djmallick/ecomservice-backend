@@ -30,7 +30,7 @@ public class Product {
 	private boolean active;
 	private double price;
 	private int stock;
-	
+	 
 	@ManyToOne
 	@JoinColumn(name ="seller_id")
 	private Seller seller;
