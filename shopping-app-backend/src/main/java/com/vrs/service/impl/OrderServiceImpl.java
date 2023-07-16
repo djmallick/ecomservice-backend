@@ -142,6 +142,13 @@ public class OrderServiceImpl implements OrderService{
 			String status = orderDto.getStatus();
 			
 			if(status.equals("accepted")) {
+				if(order.getStatus().equals((OrderStatus.CANCEL_REQUESTED))) {
+					OrderCancellationRequest orderCancellationRequest = orderCancellationRequestRepo.findByOrderActive(order);
+					orderCancellationRequest.setDateOfReview(new Date());
+					orderCancellationRequest.setCancelled(false);
+					orderCancellationRequest.setActive(false);
+					orderCancellationRequestRepo.save(orderCancellationRequest);
+				}
 				order.setStatus(OrderStatus.ACCEPTED);
 				order.setActive(true);
 			} else if(status.equals("shipped")) {
@@ -152,7 +159,7 @@ public class OrderServiceImpl implements OrderService{
 				order.setActive(false);
 			} else if(status.equals("cancelled")) {
 				if(order.getStatus().equals((OrderStatus.CANCEL_REQUESTED))) {
-					OrderCancellationRequest orderCancellationRequest = orderCancellationRequestRepo.findByOrder(order);
+					OrderCancellationRequest orderCancellationRequest = orderCancellationRequestRepo.findByOrderActive(order);
 					orderCancellationRequest.setDateOfReview(new Date());
 					orderCancellationRequest.setCancelled(true);
 					orderCancellationRequest.setActive(false);

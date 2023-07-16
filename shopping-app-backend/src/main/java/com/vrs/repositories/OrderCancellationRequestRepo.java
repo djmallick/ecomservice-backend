@@ -12,7 +12,8 @@ import com.vrs.entities.OrderCancellationRequest;
 import com.vrs.entities.Seller;
 
 public interface OrderCancellationRequestRepo extends JpaRepository<OrderCancellationRequest, Integer> {
-	OrderCancellationRequest findByOrder(Order order);
+	@Query(value="SELECT o from OrderCancellationRequest o where o.order=:order and o.isActive=true")
+	OrderCancellationRequest findByOrderActive(@Param("order") Order order);
 	
 	@Query(value="SELECT o from OrderCancellationRequest o where o.order.product.seller=:seller and o.isActive=true")
 	List<OrderCancellationRequest> findBySeller(@Param("seller") Seller seller);

@@ -11,6 +11,8 @@ public class ReviewDto {
 	
 	private int reviewId;
 	
+	private int productId;
+	
 	@NotEmpty(message = "Must not be empty")
 	@NotNull
 	private String description;
@@ -58,6 +60,12 @@ public class ReviewDto {
 	public String toString() {
 		return "ReviewDto [reviewId=" + reviewId + ", description=" + description + ", rating=" + rating
 				+ ", customerName=" + customerName + ", dateOfReview=" + dateOfReview + "]";
+	}
+	public int getProductId() {
+		return productId;
+	}
+	public void setProductId(int productId) {
+		this.productId = productId;
 	}
 	
 	
