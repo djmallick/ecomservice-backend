@@ -2,11 +2,17 @@ package com.vrs.service.impl;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Optional;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import com.vrs.dto.ReviewDto;
@@ -15,8 +21,8 @@ import com.vrs.entities.Order;
 import com.vrs.entities.OrderStatus;
 import com.vrs.entities.Product;
 import com.vrs.entities.Review;
+import com.vrs.entities.Seller;
 import com.vrs.exception.InvalidReviewCreationException;
-import com.vrs.exception.InvalidUpdateException;
 import com.vrs.exception.ResourceNotFoundException;
 import com.vrs.payload.ReviewPagedResponse;
 import com.vrs.payload.ReviewResponse;
@@ -111,21 +117,27 @@ public class ReviewServiceImpl implements ReviewService {
 	}
 
 	@Override
-	public ReviewPagedResponse getReviewByProductId(Integer productId) {
-		// TODO Auto-generated method stub
-		return null;
+	public ReviewPagedResponse getReviewByProductId(Integer pageNumber, Integer pageSize, String sortBy, String sortDir,Integer productId) {
+		Product product = productRepo.findById(productId).orElseThrow(()-> new ResourceNotFoundException("Product","id", productId));
+		Pageable p = getPageable(pageNumber, pageSize, sortBy, sortDir);
+		Page<Review> pageReviews = reviewRepo.findByProduct(product, p);		
+		return createReviewPagedResponse(pageReviews);
 	}
 
 	@Override
-	public ReviewPagedResponse getReviewByCustomerId(Integer customerId) {
-		// TODO Auto-generated method stub
-		return null;
+	public ReviewPagedResponse getReviewByCustomerId(Integer pageNumber, Integer pageSize, String sortBy, String sortDir, Integer customerId) {
+		Customer customer = customerRepo.findById(customerId).orElseThrow(()-> new ResourceNotFoundException("Customer","id", customerId));
+		Pageable p = getPageable(pageNumber, pageSize, sortBy, sortDir);
+		Page<Review> pageReviews = reviewRepo.findByCustomer(customer, p);		
+		return createReviewPagedResponse(pageReviews);
 	}
 
 	@Override
-	public ReviewPagedResponse getReviewBySellerId(Integer sellerId) {
-		// TODO Auto-generated method stub
-		return null;
+	public ReviewPagedResponse getReviewBySellerId(Integer pageNumber, Integer pageSize, String sortBy, String sortDir, Integer sellerId) {
+		Seller seller = sellerRepo.findById(sellerId).orElseThrow(()-> new ResourceNotFoundException("Seller","id", sellerId));
+		Pageable p = getPageable(pageNumber, pageSize, sortBy, sortDir);
+		Page<Review> pageReviews = reviewRepo.findBySeller(seller, p);		
+		return createReviewPagedResponse(pageReviews);
 	}
 
 	
@@ -151,7 +163,40 @@ public class ReviewServiceImpl implements ReviewService {
 		reviewDto.setDateOfReview(review.getDateOfReview());
 		reviewDto.setRating(review.getRating());
 		reviewDto.setReviewId(review.getReviewId());
+		reviewDto.setProductId(review.getOrder().getProduct().getProductId());
 		reviewDto.setCustomerName(review.getCustomer().getFirstName()+" "+review.getCustomer().getLastName());
 		return reviewDto;
 	}
+	
+	private ReviewPagedResponse createReviewPagedResponse(Page<Review> pageReviews) {
+		List<Review> reviews = pageReviews.getContent();
+		List<ReviewDto> fetchedReviews = new ArrayList<ReviewDto>();
+		for(Review review:reviews) {
+			ReviewDto fetchedReviewDto = reviewToReviewDto(review);
+			fetchedReviews.add(fetchedReviewDto);
+		}
+		ReviewPagedResponse reviewPagedResponse = new ReviewPagedResponse();
+		reviewPagedResponse.setContents(fetchedReviews);
+		reviewPagedResponse.setPageNumber(pageReviews.getNumber());
+		reviewPagedResponse.setPageSize(pageReviews.getSize());
+		reviewPagedResponse.setTotalElements(pageReviews.getTotalElements());
+		reviewPagedResponse.setLastPage(pageReviews.isLast());
+		reviewPagedResponse.setTotalPages(pageReviews.getTotalPages());
+		reviewPagedResponse.setSuccessful(true);
+		reviewPagedResponse.setMessage("Fetched successfully");
+		return reviewPagedResponse;
+	}
+	
+	private Pageable getPageable(Integer pageNumber, Integer pageSize, String sortBy, String sortDir) {
+		Sort sort = null;
+		if(sortDir.equals("desc")) {
+			sort = Sort.by(sortBy).descending();
+		}
+		else {
+			sort = Sort.by(sortBy).ascending();
+		}
+		return PageRequest.of(pageNumber, pageSize, sort);
+		
+	}
+	
 }
