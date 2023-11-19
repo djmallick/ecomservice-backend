@@ -37,7 +37,7 @@ public class GlobalExceptionHandler {
 	public ResponseEntity<ApiResponse> disabledExceptionHandler(DisabledException ex){
 		String message = ex.getMessage();
 		ApiResponse apiResponse = new ApiResponse(message, false);
-		return new ResponseEntity<ApiResponse> (apiResponse,HttpStatus.FORBIDDEN);
+		return new ResponseEntity<ApiResponse> (apiResponse,HttpStatus.UNAUTHORIZED);
 	}
 	
 	@ExceptionHandler(MethodArgumentNotValidException.class)
