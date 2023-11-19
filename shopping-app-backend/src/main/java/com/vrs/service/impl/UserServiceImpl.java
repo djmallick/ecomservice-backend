@@ -3,6 +3,7 @@ package com.vrs.service.impl;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.modelmapper.ModelMapper;
@@ -16,6 +17,7 @@ import com.vrs.entities.Customer;
 import com.vrs.entities.Role;
 import com.vrs.entities.Seller;
 import com.vrs.entities.User;
+import com.vrs.exception.DuplicateEntityInsertionException;
 import com.vrs.exception.ResourceNotFoundException;
 import com.vrs.repositories.CustomerRepo;
 import com.vrs.repositories.RoleRepository;
@@ -88,11 +90,14 @@ public class UserServiceImpl implements UserService {
 		List<Seller> sellers = this.sellerRepo.findAll();
 		List<SellerDto> sellerDtos = new ArrayList<SellerDto>();
 		for(Seller s:sellers) {
-			System.out.println(s.getUser().getEmail());
 			s.getUser().setPassword(null);
 			UserDto u = modelMapper.map(s.getUser(), UserDto.class);
 			SellerDto sd = modelMapper.map(s, SellerDto.class);
-			sd.setUserDto(u);
+			sd.setUserId(u.getUserId());
+			sd.setEmail(u.getEmail());
+			sd.setRoles(s.getUser().getRoles());
+			sd.setActive(u.isActive());
+			sd.setRegistrationDate(u.getRegistrationDate());
 			sellerDtos.add(sd);
 		}
 		return sellerDtos;
@@ -114,15 +119,34 @@ public class UserServiceImpl implements UserService {
 
 	@Override
 	public SellerDto createSeller(SellerDto sellerDto) {
-		sellerDto.getUserDto().setActive(false);
-		sellerDto.getUserDto().setRegistrationDate(new Date());
+//		sellerDto.getUserDto().setActive(false);
+//		sellerDto.getUserDto().setRegistrationDate(new Date());
+		Optional<User> findByEmail = userRepo.findByEmail(sellerDto.getEmail());
+		if(findByEmail.isPresent()) {
+			throw new DuplicateEntityInsertionException("Email", sellerDto.getEmail(), "Email already exists");
+		}
+		sellerDto.setActive(false);
+		sellerDto.setRegistrationDate(new Date());
 		Seller seller = modelMapper.map(sellerDto, Seller.class);
+		User user = new User();
+		user.setActive(false);
+		user.setRegistrationDate(new Date());
 		Role role = roleRepo.findByRoleName("ROLE_SELLER");
-		seller.getUser().getRoles().add(role);
-		Seller savedSeller = sellerRepo.save(seller);
-		UserDto u = modelMapper.map(savedSeller.getUser(), UserDto.class);
+		
+//		seller.getUser().getRoles().add(role);
+		user.getRoles().add(role);
+		user.setEmail(sellerDto.getEmail());
+		user.setPassword(sellerDto.getPassword());
+		seller.setUser(user);
+		Seller savedSeller = sellerRepo.save(seller);	
+		User savedUser = savedSeller.getUser();
+		
+		
+//		UserDto u = modelMapper.map(savedSeller.getUser(), UserDto.class);
 		SellerDto sd =  modelMapper.map(savedSeller, SellerDto.class);
-		sd.setUserDto(u); 
+		sd.setRoles(savedUser.getRoles());
+		sd.setEmail(savedUser.getEmail());
+		sd.setRegistrationDate(savedUser.getRegistrationDate());
 		return sd;	
 	}
 	
@@ -143,17 +167,24 @@ public class UserServiceImpl implements UserService {
 	@Override
 	public SellerDto updateSeller(SellerDto sellerDto, Integer sellerId) {
 		Seller seller = this.sellerRepo.findById(sellerId).orElseThrow(()-> new ResourceNotFoundException("User ","id ", sellerId));
+		Optional<User> findByEmail = userRepo.findByEmail(sellerDto.getEmail());
+		if(findByEmail.isPresent() && !seller.getUser().getEmail().equalsIgnoreCase(sellerDto.getEmail())) {
+			throw new DuplicateEntityInsertionException("Email", sellerDto.getEmail(), "Email already exists");
+		}
 		seller.setFirstName(sellerDto.getFirstName());
 		seller.setLastName(sellerDto.getLastName());
 		seller.setMobileNumber(sellerDto.getMobileNumber());
 		seller.setDateOfBirth(sellerDto.getDateOfBirth());
-		seller.getUser().setPassword(sellerDto.getUserDto().getPassword());	
-		seller.getUser().setEmail(sellerDto.getUserDto().getEmail());
+		seller.getUser().setPassword(sellerDto.getPassword());	
+		seller.getUser().setEmail(sellerDto.getEmail());
+		
 		Seller updatedSeller = sellerRepo.save(seller);
-		UserDto u = modelMapper.map(updatedSeller.getUser(), UserDto.class);
+		
 		SellerDto sd =  modelMapper.map(updatedSeller, SellerDto.class);
-		sd.setUserDto(u);
-		return sd;
+		sd.setRoles(updatedSeller.getUser().getRoles());
+		sd.setEmail(updatedSeller.getUser().getEmail());
+		sd.setRegistrationDate(updatedSeller.getUser().getRegistrationDate());
+		return sd;	
 	}
 
 	@Override
@@ -190,7 +221,11 @@ public class UserServiceImpl implements UserService {
 		Seller seller = this.sellerRepo.findById(sellerId).orElseThrow(()-> new ResourceNotFoundException("Seller","id ", sellerId));
 		UserDto u = modelMapper.map(seller.getUser(), UserDto.class);
 		SellerDto sd =  modelMapper.map(seller, SellerDto.class);
-		sd.setUserDto(u); 
+		sd.setUserId(u.getUserId());
+		sd.setEmail(u.getEmail());
+		sd.setRoles(u.getRoles());
+		sd.setActive(u.isActive());
+		sd.setRegistrationDate(u.getRegistrationDate());
 		return sd;	
 	}
 

@@ -25,7 +25,7 @@ import com.vrs.payload.ApiResponse;
 import com.vrs.service.UserService;
 
 @RestController
-@RequestMapping("/user")
+@RequestMapping("/api/user")
 public class UserController {
 
 	@Autowired

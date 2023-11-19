@@ -71,4 +71,11 @@ public class GlobalExceptionHandler {
 		ReviewResponse reviewResponse = new ReviewResponse(false, message, null);
 		return new ResponseEntity<ReviewResponse> (reviewResponse,HttpStatus.BAD_REQUEST);
 	}
+	
+	@ExceptionHandler(DuplicateEntityInsertionException.class)
+	public ResponseEntity<ApiResponse> duplicateEntityInsertionExceptionHandler(DuplicateEntityInsertionException ex){
+		String message = ex.getMessage();
+		ApiResponse apiResponse = new ApiResponse(message, false);
+		return new ResponseEntity<ApiResponse> (apiResponse,HttpStatus.BAD_REQUEST);
+	}
 }

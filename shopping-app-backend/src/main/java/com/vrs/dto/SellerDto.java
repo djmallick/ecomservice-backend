@@ -9,10 +9,10 @@ import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
-public class SellerDto {
+public class SellerDto extends UserDto{
 	private int sellerId;
-	@NotNull
-	@Valid private UserDto userDto;
+//	@NotNull
+//	@Valid private UserDto userDto;
 
 	@NotEmpty(message = "Must not be empty")
 	@NotNull
@@ -27,13 +27,13 @@ public class SellerDto {
 	
 	private Date dateOfBirth;
 	
-	public UserDto getUserDto() {
-		return userDto;
-	}
-
-	public void setUserDto(UserDto userDto) {
-		this.userDto = userDto;
-	}
+//	public UserDto getUserDto() {
+//		return userDto;
+//	}
+//
+//	public void setUserDto(UserDto userDto) {
+//		this.userDto = userDto;
+//	}
 
 
 	public int getSellerId() {
