@@ -42,7 +42,7 @@ public class User implements UserDetails{
 	
 	private Date registrationDate;
 	
-	@ManyToMany(cascade= CascadeType.ALL, fetch = FetchType.EAGER)
+	@ManyToMany(cascade= CascadeType.PERSIST, fetch = FetchType.EAGER)
 	@JoinTable(name="user_role", 
 	joinColumns=@JoinColumn(name="user", referencedColumnName="user_id"),
 	inverseJoinColumns=@JoinColumn(name="role", referencedColumnName="role_id"))

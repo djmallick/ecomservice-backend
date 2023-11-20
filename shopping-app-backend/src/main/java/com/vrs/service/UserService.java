@@ -10,9 +10,7 @@ import com.vrs.dto.UserDto;
 public interface UserService {
 	
 	UserDto createUser(UserDto userDto);
-	
-	UserDto updateUser(UserDto userDto, Integer userId);
-	
+		
 	UserDto getUserByUserId(Integer userId);
 	
 	List<UserDto> getAllUsers();

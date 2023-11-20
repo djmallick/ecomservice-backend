@@ -1,6 +1,7 @@
 package com.vrs.service.impl;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -8,6 +9,8 @@ import java.util.stream.Collectors;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import com.vrs.dto.CustomerDto;
@@ -19,6 +22,7 @@ import com.vrs.entities.Seller;
 import com.vrs.entities.User;
 import com.vrs.exception.DuplicateEntityInsertionException;
 import com.vrs.exception.ResourceNotFoundException;
+import com.vrs.exception.UnauthorizedResourceAccessException;
 import com.vrs.repositories.CustomerRepo;
 import com.vrs.repositories.RoleRepository;
 import com.vrs.repositories.SellerRepo;
@@ -49,19 +53,6 @@ public class UserServiceImpl implements UserService {
 		userDto.setRegistrationDate(new Date());
 		User user = userRepo.save(modelMapper.map(userDto, User.class));
 		return modelMapper.map(user, UserDto.class);
-	}
-
-	@Override
-	public UserDto updateUser(UserDto userDto, Integer userId) {
-		User user = this.userRepo.findById(userId).orElseThrow(()-> new ResourceNotFoundException("User ","id ", userId));
-		if(userDto.isActive() != user.isActive()) {
-			user.setActive(userDto.isActive());
-		}
-		if(!userDto.getRoles().isEmpty() && userDto.getRoles()!= null) {
-			user.setRoles(userDto.getRoles());
-		}
-		User updatedUser = userRepo.save(user);
-		return modelMapper.map(updatedUser, UserDto.class);
 	}
 
 	@Override
@@ -119,8 +110,6 @@ public class UserServiceImpl implements UserService {
 
 	@Override
 	public SellerDto createSeller(SellerDto sellerDto) {
-//		sellerDto.getUserDto().setActive(false);
-//		sellerDto.getUserDto().setRegistrationDate(new Date());
 		Optional<User> findByEmail = userRepo.findByEmail(sellerDto.getEmail());
 		if(findByEmail.isPresent()) {
 			throw new DuplicateEntityInsertionException("Email", sellerDto.getEmail(), "Email already exists");
@@ -133,7 +122,6 @@ public class UserServiceImpl implements UserService {
 		user.setRegistrationDate(new Date());
 		Role role = roleRepo.findByRoleName("ROLE_SELLER");
 		
-//		seller.getUser().getRoles().add(role);
 		user.getRoles().add(role);
 		user.setEmail(sellerDto.getEmail());
 		user.setPassword(sellerDto.getPassword());
@@ -141,8 +129,6 @@ public class UserServiceImpl implements UserService {
 		Seller savedSeller = sellerRepo.save(seller);	
 		User savedUser = savedSeller.getUser();
 		
-		
-//		UserDto u = modelMapper.map(savedSeller.getUser(), UserDto.class);
 		SellerDto sd =  modelMapper.map(savedSeller, SellerDto.class);
 		sd.setRoles(savedUser.getRoles());
 		sd.setEmail(savedUser.getEmail());
@@ -166,10 +152,22 @@ public class UserServiceImpl implements UserService {
 
 	@Override
 	public SellerDto updateSeller(SellerDto sellerDto, Integer sellerId) {
+		
 		Seller seller = this.sellerRepo.findById(sellerId).orElseThrow(()-> new ResourceNotFoundException("User ","id ", sellerId));
+		if(!checkAuthorization(seller.getUser().getEmail())) {
+			throw new UnauthorizedResourceAccessException("Email", SecurityContextHolder.getContext().getAuthentication().getName());
+		}
+		
 		Optional<User> findByEmail = userRepo.findByEmail(sellerDto.getEmail());
 		if(findByEmail.isPresent() && !seller.getUser().getEmail().equalsIgnoreCase(sellerDto.getEmail())) {
 			throw new DuplicateEntityInsertionException("Email", sellerDto.getEmail(), "Email already exists");
+		}
+		
+		List<String> rolesFromSecurityContext = getRolesFromSecurityContext();
+		for(String role:rolesFromSecurityContext) {
+			if(role.equals("ROLE_ADMIN")) {
+				seller.getUser().setActive(sellerDto.isActive());
+			}
 		}
 		seller.setFirstName(sellerDto.getFirstName());
 		seller.setLastName(sellerDto.getLastName());
@@ -184,8 +182,10 @@ public class UserServiceImpl implements UserService {
 		sd.setRoles(updatedSeller.getUser().getRoles());
 		sd.setEmail(updatedSeller.getUser().getEmail());
 		sd.setRegistrationDate(updatedSeller.getUser().getRegistrationDate());
+		sd.setActive(updatedSeller.getUser().isActive());
 		return sd;	
 	}
+
 
 	@Override
 	public CustomerDto updateCustomer(CustomerDto customerDto, Integer customerId) {
@@ -207,7 +207,9 @@ public class UserServiceImpl implements UserService {
 	@Override
 	public void deleteSeller(Integer sellerId) {
 		Seller seller = this.sellerRepo.findById(sellerId).orElseThrow(()-> new ResourceNotFoundException("Seller","id ", sellerId));
-		this.sellerRepo.delete(seller);	
+		System.out.println(seller.getUser().getEmail());
+		this.userRepo.delete(seller.getUser());
+//		this.sellerRepo.delete(seller);	
 	}
 
 	@Override
@@ -237,5 +239,33 @@ public class UserServiceImpl implements UserService {
 		cd.setUserDto(u); 
 		return cd;	
 	}
+	
+	
+	private static boolean checkAuthorization(String userEmail) {
+		Collection<? extends GrantedAuthority> authorities = SecurityContextHolder.getContext().getAuthentication().getAuthorities();
+		List<String> roles = new ArrayList<String>();
+		authorities.forEach((a)->roles.add(a.getAuthority()));
+		for(String role:roles) {
+			if(role.equals("ROLE_ADMIN")) {
+				return true;
+			}
+		}
+		String contextEmail = SecurityContextHolder.getContext().getAuthentication().getName();
+		if(contextEmail.equalsIgnoreCase(userEmail)) {
+			return true;
+		}else {
+			return false;
+		}
+		
+	}
+	
+	private static List<String> getRolesFromSecurityContext() {
+		Collection<? extends GrantedAuthority> authorities = SecurityContextHolder.getContext().getAuthentication().getAuthorities();
+		List<String> roles = new ArrayList<String>();
+		authorities.forEach((a)->roles.add(a.getAuthority()));
+		return roles;
+	}
+	
+	
 
 }
