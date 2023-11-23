@@ -31,7 +31,7 @@ public class UserController {
 	@Autowired
 	UserService userService;
 	
-//	@PreAuthorize("hasRole('ADMIN')")
+	@PreAuthorize("hasRole('ADMIN')")
 	@GetMapping("/seller")
 	public ResponseEntity<List<SellerDto>> getAllSellers() {
 		List<SellerDto> allSellers = userService.getAllSellers();
@@ -52,12 +52,6 @@ public class UserController {
 		return new ResponseEntity<List<UserDto>>(allUsers, HttpStatus.OK);	
 	}
 	
-	@PutMapping("/{userId}")
-	public ResponseEntity<UserDto> activateUser(@PathVariable Integer userId, @RequestBody UserDto userDto){
-		UserDto updatedUser = userService.updateUser(userDto, userId);
-		return new ResponseEntity<>(updatedUser, HttpStatus.ACCEPTED);	
-	}
-	
 	@PostMapping("/seller")
 	public ResponseEntity<SellerDto> createSeller(@Valid @RequestBody SellerDto sellerDto) {
 		SellerDto createdSellerDto = this.userService.createSeller(sellerDto);
@@ -70,6 +64,7 @@ public class UserController {
 		return new ResponseEntity<CustomerDto>(createdCustomerDto, HttpStatus.CREATED);	
 	}
 	
+	@PreAuthorize("hasAnyRole('SELLER','ADMIN')")
 	@PutMapping("/seller/{sellerId}")
 	public ResponseEntity<SellerDto> updateSeller(@Valid @RequestBody SellerDto sellerDto, @PathVariable Integer sellerId) {
 		SellerDto updatedSellerDto = this.userService.updateSeller(sellerDto, sellerId);
@@ -89,7 +84,8 @@ public class UserController {
 		return new ResponseEntity<>(new ApiResponse("Customer deleted successfully!",true), HttpStatus.ACCEPTED);	
 	}
 	
-	@DeleteMapping("/user/{sellerId}")
+	@PreAuthorize("hasRole('ADMIN')")
+	@DeleteMapping("/seller/{sellerId}")
 	public ResponseEntity<ApiResponse> deleteSeller(@PathVariable Integer sellerId) {
 		this.userService.deleteSeller(sellerId);
 		return new ResponseEntity<>(new ApiResponse("Seller deleted successfully!",true), HttpStatus.ACCEPTED);	
@@ -101,6 +97,7 @@ public class UserController {
 		return new ResponseEntity<>(customerDto, HttpStatus.OK);	
 	}
 	
+	@PreAuthorize("hasRole('ADMIN')")
 	@GetMapping("/seller/{sellerId}")
 	public ResponseEntity<SellerDto> getSellerById(@PathVariable Integer sellerId) {
 		SellerDto sellerDto = this.userService.getSellerById(sellerId);

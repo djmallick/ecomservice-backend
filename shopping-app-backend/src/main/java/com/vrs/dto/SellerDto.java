@@ -27,15 +27,6 @@ public class SellerDto extends UserDto{
 	
 	private Date dateOfBirth;
 	
-//	public UserDto getUserDto() {
-//		return userDto;
-//	}
-//
-//	public void setUserDto(UserDto userDto) {
-//		this.userDto = userDto;
-//	}
-
-
 	public int getSellerId() {
 		return sellerId;
 	}
