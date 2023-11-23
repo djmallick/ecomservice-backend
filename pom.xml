@@ -71,6 +71,7 @@
 				<artifactId>spring-boot-maven-plugin</artifactId>
 			</plugin>
 		</plugins>
+		<finalName>shopping-app-backend</finalName>
 	</build>
 
 </project>
