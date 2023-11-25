@@ -4,4 +4,4 @@ COPY ./target/*.jar /shopping-app-backend.jar
 FROM openjdk:11.0.15-jdk-slim
 COPY . /shopping-app-backend.jar
 EXPOSE 8080
-ENTRYPOINT ["java","-jar","shopping-app-backend.jar"]
+ENTRYPOINT ["java","-jar","/shopping-app-backend.jar"]
