@@ -25,7 +25,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 
 @Entity
-@Table(name="user")
+@Table(name="users")
 public class User implements UserDetails{
 
 	@Id
@@ -44,7 +44,7 @@ public class User implements UserDetails{
 	
 	@ManyToMany(cascade= CascadeType.PERSIST, fetch = FetchType.EAGER)
 	@JoinTable(name="user_role", 
-	joinColumns=@JoinColumn(name="user", referencedColumnName="user_id"),
+	joinColumns=@JoinColumn(name="users", referencedColumnName="user_id"),
 	inverseJoinColumns=@JoinColumn(name="role", referencedColumnName="role_id"))
 	private Set<Role> roles = new HashSet<Role>();
 	
